@@ -724,57 +724,57 @@ export class Canon extends Camera {
     public static async processEventMonitoringStream(
         stream: ReadableStream<Uint8Array>,
         onEvent: (event: any) => void
-      ): Promise<void> {
+    ): Promise<void> {
         const reader = stream.getReader();
         let buffer = new Uint8Array();
-      
+
         try {
-          while (true) {
-            const { value, done } = await reader.read();
-            if (done) {
-              console.warn("Stream ended normally");
-              break;
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) {
+                    console.warn('Stream ended normally');
+                    break;
+                }
+                if (!value) continue;
+
+                const newBuffer = new Uint8Array(buffer.length + value.length);
+                newBuffer.set(buffer);
+                newBuffer.set(value, buffer.length);
+                buffer = newBuffer;
+
+                while (buffer.length >= 6) {
+                    if (buffer[0] !== 0xff || buffer[1] !== 0x00) {
+                        buffer = buffer.slice(1);
+                        continue;
+                    }
+
+                    const type = buffer[2];
+                    const length = (buffer[3] << 24) | (buffer[4] << 16) | (buffer[5] << 8) | buffer[6];
+                    if (buffer.length < length + 7) break;
+
+                    const eventData = buffer.slice(7, length + 7);
+                    const decoder = new TextDecoder();
+                    try {
+                        const jsonStr = decoder.decode(eventData);
+                        const event = JSON.parse(jsonStr);
+                        onEvent(event);
+                    } catch (e) {
+                        console.error('Failed to parse event data:', e);
+                    }
+
+                    buffer = buffer.slice(length + 7);
+                }
             }
-            if (!value) continue;
-      
-            const newBuffer = new Uint8Array(buffer.length + value.length);
-            newBuffer.set(buffer);
-            newBuffer.set(value, buffer.length);
-            buffer = newBuffer;
-      
-            while (buffer.length >= 6) {
-              if (buffer[0] !== 0xff || buffer[1] !== 0x00) {
-                buffer = buffer.slice(1);
-                continue;
-              }
-      
-              const type = buffer[2];
-              const length = (buffer[3] << 24) | (buffer[4] << 16) | (buffer[5] << 8) | buffer[6];
-              if (buffer.length < length + 7) break;
-      
-              const eventData = buffer.slice(7, length + 7);
-              const decoder = new TextDecoder();
-              try {
-                const jsonStr = decoder.decode(eventData);
-                const event = JSON.parse(jsonStr);
-                onEvent(event);
-              } catch (e) {
-                console.error('Failed to parse event data:', e);
-              }
-      
-              buffer = buffer.slice(length + 7);
-            }
-          }
         } catch (err: any) {
-          // Check for Undici socket termination
-          if (err?.code === 'UND_ERR_SOCKET' || err?.message?.includes('terminated')) {
-            throw new Error('ConnectionTerminated');
-          }
-          throw err;
+            // Check for Undici socket termination
+            if (err?.code === 'UND_ERR_SOCKET' || err?.message?.includes('terminated')) {
+                throw new Error('ConnectionTerminated');
+            }
+            throw err;
         } finally {
-          reader.releaseLock();
+            reader.releaseLock();
         }
-      }
+    }
 
     private static getSDPIpAddress(sdp: string): string | null {
         const lines = sdp.split('\n');
@@ -920,7 +920,7 @@ export class Canon extends Camera {
      * }
      * @throws {Error} When datetime feature not found or request fails
      */
-    async getDateTimeSetting(): Promise<CanonDateTimeSetting> {
+    async getDatetime(): Promise<CanonDateTimeSetting> {
         const url = this.getFeatureUrl('functions/datetime');
 
         if (!url) {
@@ -934,6 +934,48 @@ export class Canon extends Camera {
         }
 
         return response.json();
+    }
+
+    /**
+     * Set the date and time on the Canon camera.
+     *
+     * Makes a PUT request to /functions/datetime to change the date and time.
+     *
+     * @param datetime - The date and time to set (RFC1123 compliant).
+     * @param dst - Daylight saving time status.
+     * @returns {Promise<{datetime: string, dst: boolean}>} Object containing the new date and time and daylight saving time status.
+     * @throws {Error} When invalid parameter, device is busy, or mode not supported.
+     */
+    async setDatetime(datetime: string, dst: boolean): Promise<{ datetime: string; dst: boolean }> {
+        const endpoint = this.getFeatureUrl('functions/datetime');
+        if (!endpoint) {
+            throw new Error('Date and time setting feature not found');
+        }
+        try {
+            const response = await fetch(endpoint.path, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ datetime, dst }),
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                if (response.status === 400) {
+                    throw new Error(
+                        error.message ||
+                            'Invalid parameter - datetime must be RFC1123 compliant and dst must be a boolean'
+                    );
+                }
+                if (response.status === 503) {
+                    throw new Error(error.message || 'Device busy, during shooting/recording, or mode not supported');
+                }
+                throw new Error(`Failed to set date and time setting: ${response.status} ${response.statusText}`);
+            }
+            return response.json();
+        } catch (error) {
+            throw error;
+        }
     }
 
     /**
@@ -2237,7 +2279,7 @@ export class Canon extends Camera {
      * - Device is busy
      * - During shooting/recording
      */
-    async setAutofocusOperationSetting(value: string): Promise<{ value: string }> {
+    async setAfOperation(value: string): Promise<{ value: string }> {
         const endpoint = this.getFeatureUrl('shooting/settings/afoperation');
 
         if (!endpoint) {
@@ -3526,7 +3568,6 @@ export class Canon extends Camera {
         }
     }
 
-    
     private buildFeatureUrl(feature: ApiEndpoint) {
         const url = new URL(feature.path, this.baseUrl);
 
@@ -3600,7 +3641,9 @@ export class Canon extends Camera {
                 if (response.status === 503) {
                     throw new Error(error.message || 'Device busy or mode not supported');
                 }
-                throw new Error(error.message || `Failed to set exposure bracket setting: ${response.status} ${response.statusText}`);
+                throw new Error(
+                    error.message || `Failed to set exposure bracket setting: ${response.status} ${response.statusText}`
+                );
             }
             return response.json();
         } catch (error) {
@@ -3616,7 +3659,7 @@ export class Canon extends Camera {
      * @returns {Promise<{value: string, ability: string[]}>} Object containing current AF method value and available options.
      * @throws {Error} When the device is busy or during shooting/recording.
      */
-    async getAfMethodSetting(): Promise<{ value: string, ability: string[] }> {
+    async getAfMethodSetting(): Promise<{ value: string; ability: string[] }> {
         const endpoint = this.getFeatureUrl('shooting/settings/afmethod');
 
         if (!endpoint) {
@@ -3624,7 +3667,10 @@ export class Canon extends Camera {
         }
 
         try {
-            const response = await fetch(endpoint.path, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+            const response = await fetch(endpoint.path, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+            });
 
             if (!response.ok) {
                 const error = await response.json();
@@ -3649,7 +3695,7 @@ export class Canon extends Camera {
      * @returns {Promise<{ value: string }>} Object containing the new AF method value.
      * @throws {Error} When invalid parameter, device is busy, or during shooting/recording.
      */
-    async setAfMethodSetting(value: string): Promise<{ value: string }> {
+    async setAfMethod(value: string): Promise<{ value: string }> {
         const endpoint = this.getFeatureUrl('shooting/settings/afmethod');
 
         if (!endpoint) {
@@ -3700,7 +3746,10 @@ export class Canon extends Camera {
         }
 
         try {
-            const response = await fetch(endpoint.path, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+            const response = await fetch(endpoint.path, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+            });
 
             if (!response.ok) {
                 if (response.status === 503) {
@@ -3748,7 +3797,9 @@ export class Canon extends Camera {
             if (!response.ok) {
                 const error = await response.json();
                 if (response.status === 400) {
-                    throw new Error(error.message || 'Invalid parameter - value must be a valid continuous shooting mode setting');
+                    throw new Error(
+                        error.message || 'Invalid parameter - value must be a valid continuous shooting mode setting'
+                    );
                 }
                 if (response.status === 503) {
                     throw new Error(error.message || 'Device busy, during shooting/recording, or mode not supported');
@@ -3918,8 +3969,6 @@ export class Canon extends Camera {
             throw error;
         }
     }
-
-
 }
 
 export default Canon;

@@ -289,7 +289,7 @@ server.tool(
                 ],
             };
         }
-        const autoFocusSetting = await canon.setAutofocusOperationSetting(value);
+        const autoFocusSetting = await canon.setAfOperation(value);
         return {
             content: [
                 {
@@ -378,7 +378,7 @@ server.tool('get-datetime-setting', 'Get date and time setting', {}, async () =>
             ],
         };
     }
-    const dateTimeSetting = await canon.getDateTimeSetting();
+    const dateTimeSetting = await canon.getDatetime();
     return {
         content: [
             {

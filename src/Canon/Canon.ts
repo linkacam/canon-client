@@ -724,53 +724,57 @@ export class Canon extends Camera {
     public static async processEventMonitoringStream(
         stream: ReadableStream<Uint8Array>,
         onEvent: (event: any) => void
-    ): Promise<void> {
+      ): Promise<void> {
         const reader = stream.getReader();
         let buffer = new Uint8Array();
-
-        while (true) {
+      
+        try {
+          while (true) {
             const { value, done } = await reader.read();
-            if (done) break;
+            if (done) {
+              console.warn("Stream ended normally");
+              break;
+            }
             if (!value) continue;
-
-            // Append new data to existing buffer
+      
             const newBuffer = new Uint8Array(buffer.length + value.length);
             newBuffer.set(buffer);
             newBuffer.set(value, buffer.length);
             buffer = newBuffer;
-
-            // Process complete events
+      
             while (buffer.length >= 6) {
-                // Minimum event size (2 marker + 1 type + 4 length)
-                // Look for start marker 0xFF 0x00
-                if (buffer[0] !== 0xff || buffer[1] !== 0x00) {
-                    buffer = buffer.slice(1);
-                    continue;
-                }
-
-                // Get event type and length
-                const type = buffer[2];
-                const length = (buffer[3] << 24) | (buffer[4] << 16) | (buffer[5] << 8) | buffer[6];
-
-                // Check if we have complete event
-                if (buffer.length < length + 7) break;
-
-                // Extract event data
-                const eventData = buffer.slice(7, length + 7);
-                const decoder = new TextDecoder();
-                try {
-                    const jsonStr = decoder.decode(eventData);
-                    const event = JSON.parse(jsonStr);
-                    onEvent(event);
-                } catch (e) {
-                    console.error('Failed to parse event data:', e);
-                }
-
-                // Remove processed event from buffer
-                buffer = buffer.slice(length + 7);
+              if (buffer[0] !== 0xff || buffer[1] !== 0x00) {
+                buffer = buffer.slice(1);
+                continue;
+              }
+      
+              const type = buffer[2];
+              const length = (buffer[3] << 24) | (buffer[4] << 16) | (buffer[5] << 8) | buffer[6];
+              if (buffer.length < length + 7) break;
+      
+              const eventData = buffer.slice(7, length + 7);
+              const decoder = new TextDecoder();
+              try {
+                const jsonStr = decoder.decode(eventData);
+                const event = JSON.parse(jsonStr);
+                onEvent(event);
+              } catch (e) {
+                console.error('Failed to parse event data:', e);
+              }
+      
+              buffer = buffer.slice(length + 7);
             }
+          }
+        } catch (err: any) {
+          // Check for Undici socket termination
+          if (err?.code === 'UND_ERR_SOCKET' || err?.message?.includes('terminated')) {
+            throw new Error('ConnectionTerminated');
+          }
+          throw err;
+        } finally {
+          reader.releaseLock();
         }
-    }
+      }
 
     private static getSDPIpAddress(sdp: string): string | null {
         const lines = sdp.split('\n');

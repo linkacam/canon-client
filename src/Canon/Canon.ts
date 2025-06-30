@@ -140,193 +140,85 @@ interface CanonShootingModeSetting {
     ability: string[];
 }
 
+// Generic interface for value/ability pattern
+export interface CanonValueAbility<T = string> {
+    value: T;
+    ability: string[];
+}
+
+// Generic interface for range ability pattern
+export interface CanonRangeAbility<T = number> {
+    value: T;
+    ability: {
+        min: number;
+        max: number;
+        step: number;
+    };
+}
+
+// Interface for still image quality
+export interface CanonImageQualityValue {
+    jpeg: CanonJpegQuality;
+    raw: CanonRawQuality;
+}
+export interface CanonImageQualityAbility {
+    jpeg: string[];
+    raw: string[];
+}
+export interface CanonImageQualitySetting {
+    value: CanonImageQualityValue;
+    ability: CanonImageQualityAbility;
+}
+
 export interface CanonShootingSettings {
-    shootingmode?: {
-        value: string;
-        ability: string[];
-    };
-    shootingmodedial?: {
-        value: string;
-        ability: string[];
-    };
-    shootingmodedial_movie?: {
-        value: string;
-        ability: string[];
-    };
-    av?: {
-        value: string;
-        ability: string[];
-    };
-    tv?: {
-        value: string;
-        ability: string[];
-    };
-    iso?: {
-        value: string;
-        ability: string[];
-    };
-    exposure?: {
-        value: string;
-        ability: string[];
-    };
-    wb?: {
-        value: string;
-        ability: string[];
-    };
-    colortemperature?: {
-        value: number;
-        ability: {
-            min: number;
-            max: number;
-            step: number;
-        };
-    };
-    afoperation?: {
-        value: string;
-        ability: string[];
-    };
-    afmethod?: {
-        value: string;
-        ability: string[];
-    };
-    stillimagequality?: {
-        value: {
-            jpeg: CanonJpegQuality;
-            raw: CanonRawQuality;
-        };
-        ability: {
-            jpeg: string[];
-            raw: string[];
-        };
-    };
-    stillimageaspectratio?: {
-        value: string;
-        ability: string[];
-    };
-    flash?: {
-        value: string;
-        ability: string[];
-    };
-    metering?: {
-        value: string;
-        ability: string[];
-    };
-    drive?: {
-        value: string;
-        ability: string[];
-    };
-    aeb?: {
-        value: string;
-        ability: string[];
-    };
-    focusbracketing?: {
-        value: string;
-        ability: string[];
-    };
-    focusbracketing_exposuresmoothing?: {
-        value: string;
-        ability: string[];
-    };
-    focusbracketing_focusincrement?: {
-        value: string;
-        ability: string[];
-    };
-    focusbracketing_numberofshots?: {
-        value: string;
-        ability: string[];
-    };
-    wbshift?: {
-        value: string;
-        ability: string[];
-    };
-    wbbracket?: {
-        value: string;
-        ability: string[];
-    };
-    colorspace?: {
-        value: string;
-        ability: string[];
-    };
-    picturestyle?: {
-        value: string;
-        ability: string[];
-    };
-    picturestyle_auto?: {
-        value: string;
-        ability: string[];
-    };
-    picturestyle_standard?: {
-        value: string;
-        ability: string[];
-    };
-    picturestyle_portrait?: {
-        value: string;
-        ability: string[];
-    };
-    picturestyle_landscape?: {
-        value: string;
-        ability: string[];
-    };
-    picturestyle_finedetail?: {
-        value: string;
-        ability: string[];
-    };
-    picturestyle_neutral?: {
-        value: string;
-        ability: string[];
-    };
-    picturestyle_faithful?: {
-        value: string;
-        ability: string[];
-    };
-    picturestyle_monochrome?: {
-        value: string;
-        ability: string[];
-    };
-    picturestyle_userdef1?: {
-        value: string;
-        ability: string[];
-    };
-    picturestyle_userdef1_basepicturestyle?: {
-        value: string;
-        ability: string[];
-    };
-    picturestyle_userdef2?: {
-        value: string;
-        ability: string[];
-    };
-    picturestyle_userdef2_basepicturestyle?: {
-        value: string;
-        ability: string[];
-    };
-    picturestyle_userdef3?: {
-        value: string;
-        ability: string[];
-    };
-    picturestyle_userdef3_basepicturestyle?: {
-        value: string;
-        ability: string[];
-    };
-    moviequality?: {
-        value: string;
-        ability: string[];
-    };
-    soundrecording?: {
-        value: string;
-        ability: string[];
-    };
-    soundrecording_level?: {
-        value: string;
-        ability: string[];
-    };
-    soundrecording_windfilter?: {
-        value: string;
-        ability: string[];
-    };
-    soundrecording_attenuator?: {
-        value: string;
-        ability: string[];
-    };
+    shootingmode?: CanonValueAbility;
+    shootingmodedial?: CanonValueAbility;
+    shootingmodedial_movie?: CanonValueAbility;
+    av?: CanonValueAbility;
+    tv?: CanonValueAbility;
+    iso?: CanonValueAbility;
+    exposure?: CanonValueAbility;
+    wb?: CanonValueAbility;
+    colortemperature?: CanonRangeAbility;
+    afoperation?: CanonValueAbility;
+    afmethod?: CanonValueAbility;
+    stillimagequality?: CanonImageQualitySetting;
+    stillimageaspectratio?: CanonValueAbility;
+    flash?: CanonValueAbility;
+    metering?: CanonValueAbility;
+    drive?: CanonValueAbility;
+    aeb?: CanonValueAbility;
+    focusbracketing?: CanonValueAbility;
+    focusbracketing_exposuresmoothing?: CanonValueAbility;
+    focusbracketing_focusincrement?: CanonValueAbility;
+    focusbracketing_numberofshots?: CanonValueAbility;
+    wbshift?: CanonValueAbility;
+    wbbracket?: CanonValueAbility;
+    colorspace?: CanonValueAbility;
+    picturestyle?: CanonValueAbility;
+    picturestyle_auto?: CanonValueAbility;
+    picturestyle_standard?: CanonValueAbility;
+    picturestyle_portrait?: CanonValueAbility;
+    picturestyle_landscape?: CanonValueAbility;
+    picturestyle_finedetail?: CanonValueAbility;
+    picturestyle_neutral?: CanonValueAbility;
+    picturestyle_faithful?: CanonValueAbility;
+    picturestyle_monochrome?: CanonValueAbility;
+    picturestyle_userdef1?: CanonValueAbility;
+    picturestyle_userdef1_basepicturestyle?: CanonValueAbility;
+    picturestyle_userdef2?: CanonValueAbility;
+    picturestyle_userdef2_basepicturestyle?: CanonValueAbility;
+    picturestyle_userdef3?: CanonValueAbility;
+    picturestyle_userdef3_basepicturestyle?: CanonValueAbility;
+    moviequality?: CanonValueAbility;
+    soundrecording?: CanonValueAbility;
+    soundrecording_level?: CanonValueAbility;
+    soundrecording_windfilter?: CanonValueAbility;
+    soundrecording_attenuator?: CanonValueAbility;
+}
+
+export interface CanonEventData extends CanonShootingSettings {
+    addedcontents: string[];
 }
 
 export enum CanonContentType {
@@ -516,9 +408,9 @@ export class Canon extends Camera {
     shootingMode?: string;
     ignoreShootingModeDial: boolean = false;
     shootingSettings?: any;
-    apertureSetting?: string;
-    shutterSpeedSetting?: string;
-    isoSetting?: string;
+    aperture?: CanonValueAbility;
+    shutterSpeed?: CanonValueAbility;
+    iso?: CanonValueAbility;
     autoFocusSetting?: string;
     lensInformation?: CanonLensInformation;
     intervalMode: boolean = false;
@@ -723,7 +615,7 @@ export class Canon extends Camera {
 
     public static async processEventMonitoringStream(
         stream: ReadableStream<Uint8Array>,
-        onEvent: (event: any) => void
+        onEvent: (event: CanonEventData) => void
     ): Promise<void> {
         const reader = stream.getReader();
         let buffer = new Uint8Array();
@@ -757,7 +649,7 @@ export class Canon extends Camera {
                     try {
                         const jsonStr = decoder.decode(eventData);
                         const event = JSON.parse(jsonStr);
-                        onEvent(event);
+                        onEvent(event as CanonEventData);
                     } catch (e) {
                         console.error('Failed to parse event data:', e);
                     }
@@ -1831,7 +1723,7 @@ export class Canon extends Camera {
      * }
      * @throws {Error} When device is busy or mode not supported (e.g. during movie mode)
      */
-    async getShutterSpeedSetting(): Promise<any> {
+    async getShutterSpeed(): Promise<any> {
         const endpoint = this.getFeatureUrl('shooting/settings/tv');
 
         if (!endpoint) {
@@ -1842,9 +1734,9 @@ export class Canon extends Camera {
 
         const data = await response.json();
 
-        this.shutterSpeedSetting = data.value;
+        this.shutterSpeed = data.value;
 
-        return this.shutterSpeedSetting;
+        return this.shutterSpeed;
     }
 
     /**
@@ -1873,7 +1765,7 @@ export class Canon extends Camera {
 
         try {
             const response = await fetch(endpoint.path, { method: 'PUT', body: JSON.stringify(body) });
-            this.shutterSpeedSetting = value;
+
             return response.json();
         } catch (error) {
             throw error;
@@ -2189,9 +2081,9 @@ export class Canon extends Camera {
 
         const data = await response.json();
 
-        this.isoSetting = data.value;
+        this.iso = data.value;
 
-        return this.isoSetting;
+        return this.iso;
     }
 
     /**
@@ -2225,7 +2117,6 @@ export class Canon extends Camera {
                 'Content-Type': 'application/json',
             },
         });
-        this.isoSetting = value;
         return response.json();
     }
 

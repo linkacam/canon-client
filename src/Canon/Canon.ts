@@ -407,11 +407,11 @@ export class Canon extends Camera {
     isSyncActive: boolean = false;
     shootingMode?: string;
     ignoreShootingModeDial: boolean = false;
-    shootingSettings?: any;
-    aperture?: CanonValueAbility;
-    shutterSpeed?: CanonValueAbility;
-    iso?: CanonValueAbility;
-    autoFocusSetting?: string;
+    shootingSettings?: CanonShootingSettings;
+    // aperture?: CanonValueAbility;
+    // shutterSpeed?: CanonValueAbility;
+    // iso?: CanonValueAbility;
+    // autoFocusSetting?: string;
     lensInformation?: CanonLensInformation;
     intervalMode: boolean = false;
     intervalInterval: number = 0;
@@ -453,6 +453,7 @@ export class Canon extends Camera {
             this.firmwareVersion = deviceInformation.firmwareversion;
             this.macAddress = deviceInformation.macaddress;
             this.lensInformation = await this.getLensInformation();
+
 
             if (startLiveView) {
                 await this.startLiveView(CanonLiveViewSize.SMALL, 'keep');
@@ -1647,7 +1648,7 @@ export class Canon extends Camera {
      * - Device is busy
      * - Mode not supported (e.g. during movie mode)
      */
-    async getApertureSetting(): Promise<any> {
+    async getAperture(): Promise<CanonValueAbility> {
         const endpoint = this.getFeatureUrl('shooting/settings/av');
 
         if (!endpoint) {
@@ -1656,7 +1657,11 @@ export class Canon extends Camera {
 
         const response = await fetch(endpoint.path);
 
-        return response.json();
+        const data = await response.json();
+
+        this.shootingSettings!.av = data;
+
+        return this.shootingSettings!.av!;
     }
 
     /**
@@ -1672,7 +1677,7 @@ export class Canon extends Camera {
      * - During shooting/recording
      * - Mode not supported (e.g. movie mode)
      */
-    async setApertureSetting(value: string): Promise<any> {
+    async setAperture(value: string): Promise<Pick<CanonValueAbility, 'value'>> {
         const endpoint = this.getFeatureUrl('shooting/settings/av');
 
         if (!endpoint) {
@@ -1700,7 +1705,11 @@ export class Canon extends Camera {
                 throw new Error('Device busy - camera is currently shooting or recording');
             }
 
-            return response.json();
+            const data = await response.json();
+
+            this.shootingSettings!.av!.value = data.value;
+
+            return this.shootingSettings!.av!;
         } catch (error) {
             throw error;
         }
@@ -1723,7 +1732,7 @@ export class Canon extends Camera {
      * }
      * @throws {Error} When device is busy or mode not supported (e.g. during movie mode)
      */
-    async getShutterSpeed(): Promise<any> {
+    async getShutterSpeed(): Promise<CanonValueAbility> {
         const endpoint = this.getFeatureUrl('shooting/settings/tv');
 
         if (!endpoint) {
@@ -1734,9 +1743,9 @@ export class Canon extends Camera {
 
         const data = await response.json();
 
-        this.shutterSpeed = data.value;
+        this.shootingSettings!.tv = data;
 
-        return this.shutterSpeed;
+        return this.shootingSettings!.tv!;
     }
 
     /**
@@ -1752,7 +1761,7 @@ export class Canon extends Camera {
      * - During shooting/recording
      * - Mode not supported (e.g. movie mode)
      */
-    async setShutterSpeedSetting(value: string): Promise<any> {
+    async setShutterSpeed(value: string): Promise<Pick<CanonValueAbility, 'value'>> {
         const endpoint = this.getFeatureUrl('shooting/settings/tv');
 
         if (!endpoint) {
@@ -1766,7 +1775,11 @@ export class Canon extends Camera {
         try {
             const response = await fetch(endpoint.path, { method: 'PUT', body: JSON.stringify(body) });
 
-            return response.json();
+            const data = await response.json();
+
+            this.shootingSettings!.tv!.value = data.value;
+
+            return this.shootingSettings!.tv!;
         } catch (error) {
             throw error;
         }
@@ -1835,7 +1848,7 @@ export class Canon extends Camera {
      *
      * @returns {Promise<{value: string, ability: string[]}>} Object containing current value and array of possible values
      */
-    async getWhiteBalanceSetting(): Promise<CanonWhiteBalanceSetting> {
+    async getWhiteBalance(): Promise<CanonValueAbility> {
         const endpoint = this.getFeatureUrl('shooting/settings/wb');
 
         if (!endpoint) {
@@ -1854,7 +1867,7 @@ export class Canon extends Camera {
      * @param value - The white balance value to set (e.g. "auto", "daylight", "shade", etc)
      * @returns {Promise<Pick<CanonWhiteBalanceSetting, 'value'>>} Response from the camera
      */
-    async setWhiteBalanceSetting(value: CanonWhiteBalanceMode): Promise<Pick<CanonWhiteBalanceSetting, 'value'>> {
+    async setWhiteBalance(value: CanonWhiteBalanceMode): Promise<Pick<CanonValueAbility, 'value'>> {
         const endpoint = this.getFeatureUrl('shooting/settings/wb');
 
         if (!endpoint) {
@@ -1883,7 +1896,7 @@ export class Canon extends Camera {
      *
      * @returns {Promise<CanonColorTemperatureSetting>} Object containing current value and range
      */
-    async getColorTemperatureSetting(): Promise<CanonColorTemperatureSetting> {
+    async getColorTemperature(): Promise<CanonRangeAbility> {
         const endpoint = this.getFeatureUrl('shooting/settings/colortemperature');
 
         if (!endpoint) {
@@ -1902,7 +1915,7 @@ export class Canon extends Camera {
      * @param value - The color temperature value to set (in Kelvin)
      * @returns {Promise<Pick<CanonColorTemperatureSetting, 'value'>>} Response from the camera
      */
-    async setColorTemperatureSetting(value: number): Promise<Pick<CanonColorTemperatureSetting, 'value'>> {
+    async setColorTemperature(value: number): Promise<Pick<CanonRangeAbility, 'value'>> {
         const endpoint = this.getFeatureUrl('shooting/settings/colortemperature');
 
         if (!endpoint) {
@@ -1939,7 +1952,7 @@ export class Canon extends Camera {
 
         const response = await fetch(endpoint.path);
 
-        const data = await response.json();
+        const data = await response.json() as CanonShootingSettings;
 
         this.shootingSettings = data;
 
@@ -2070,7 +2083,7 @@ export class Canon extends Camera {
      * - Device is busy
      * - Mode not supported (e.g. during movie mode)
      */
-    async getIsoSetting(): Promise<any> {
+    async getIso(): Promise<CanonValueAbility> {
         const endpoint = this.getFeatureUrl('shooting/settings/iso');
 
         if (!endpoint) {
@@ -2081,9 +2094,9 @@ export class Canon extends Camera {
 
         const data = await response.json();
 
-        this.iso = data.value;
+        this.shootingSettings!.iso = data;
 
-        return this.iso;
+        return this.shootingSettings!.iso!;
     }
 
     /**
@@ -2099,7 +2112,7 @@ export class Canon extends Camera {
      * - During shooting/recording
      * - Mode not supported (e.g. during movie mode)
      */
-    async setIsoSetting(value: string): Promise<any> {
+    async setIso(value: string): Promise<Pick<CanonValueAbility, 'value'>> {
         const endpoint = this.getFeatureUrl('shooting/settings/iso');
 
         if (!endpoint) {
@@ -2117,7 +2130,12 @@ export class Canon extends Camera {
                 'Content-Type': 'application/json',
             },
         });
-        return response.json();
+
+        const data = await response.json();
+
+        this.shootingSettings!.iso!.value = data.value;
+
+        return this.shootingSettings!.iso!;
     }
 
     /**
@@ -2150,7 +2168,7 @@ export class Canon extends Camera {
 
             const data = await response.json();
 
-            this.autoFocusSetting = data;
+            this.shootingSettings!.afoperation!.value = data.value;
 
             return data;
         } catch (error) {
@@ -2199,7 +2217,7 @@ export class Canon extends Camera {
             }
 
             const data = await response.json();
-            this.autoFocusSetting = data.value;
+            this.shootingSettings!.afoperation!.value = data.value;
             return data;
         } catch (error) {
             throw error;
@@ -3478,7 +3496,7 @@ export class Canon extends Camera {
      *   "ability": ["+0.0", "+0_1/3", "+0_2/3", "+1.0", "+1_1/3", "+1_2/3", "+2.0"]
      * }
      */
-    async getExposureBracketSetting(): Promise<{ value: string; ability: string[] }> {
+    async getExposureBracketing(): Promise<CanonValueAbility> {
         const endpoint = this.getFeatureUrl('shooting/settings/aeb');
         if (!endpoint) {
             throw new Error('Exposure bracket setting feature not found');
@@ -3511,7 +3529,7 @@ export class Canon extends Camera {
      *   "value": "+2.0"
      * }
      */
-    async setExposureBracketSetting(value: string): Promise<{ value: string }> {
+    async setExposureBracketing(value: string): Promise<Pick<CanonValueAbility, 'value'>> {
         const endpoint = this.getFeatureUrl('shooting/settings/aeb');
         if (!endpoint) {
             throw new Error('Exposure bracket setting feature not found');
@@ -3719,7 +3737,7 @@ export class Canon extends Camera {
      *   "ability": ["srgb", "adobe_rgb"]
      * }
      */
-    async getColorSpaceSetting(): Promise<{ value: string; ability: string[] }> {
+    async getColorSpace(): Promise<{ value: string; ability: string[] }> {
         const endpoint = this.getFeatureUrl('shooting/settings/colorspace');
         if (!endpoint) {
             throw new Error('Color space setting feature not found');
@@ -3757,7 +3775,7 @@ export class Canon extends Camera {
      *   "value": "srgb"
      * }
      */
-    async setColorSpaceSetting(value: string): Promise<{ value: string }> {
+    async setColorSpace(value: string): Promise<{ value: string }> {
         const endpoint = this.getFeatureUrl('shooting/settings/colorspace');
         if (!endpoint) {
             throw new Error('Color space setting feature not found');

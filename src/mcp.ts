@@ -180,7 +180,7 @@ server.tool(
                 ],
             };
         }
-        const apertureSetting = await canon.setApertureSetting(value);
+        const apertureSetting = await canon.setAperture(value);
         return {
             content: [
                 {
@@ -209,7 +209,7 @@ server.tool(
                 ],
             };
         }
-        const shutterSpeedSetting = await canon.setShutterSpeedSetting(value);
+        const shutterSpeedSetting = await canon.setShutterSpeed(value);
         return {
             content: [
                 {
@@ -238,7 +238,7 @@ server.tool(
                 ],
             };
         }
-        const isoSetting = await canon.setIsoSetting(value);
+        const isoSetting = await canon.setIso(value);
         return {
             content: [
                 {
@@ -693,7 +693,7 @@ server.tool(
 );
 
 server.tool('get-color-temperature', 'Get the color temperature of the camera', {}, async () => {
-    const colorTemperature = await canon.getColorTemperatureSetting();
+    const colorTemperature = await canon.getColorTemperature();
     return {
         content: [{ type: 'text', text: JSON.stringify(colorTemperature) }],
     };
@@ -706,7 +706,7 @@ server.tool(
         value: z.number().describe('The value to set the color temperature to'),
     },
     async ({ value }) => {
-        const colorTemperature = await canon.setColorTemperatureSetting(value);
+        const colorTemperature = await canon.setColorTemperature(value);
 
         return {
             content: [{ type: 'text', text: JSON.stringify(colorTemperature) }],
@@ -721,7 +721,7 @@ server.tool(
         value: z.nativeEnum(CanonWhiteBalanceMode).describe('The value to set the white balance to'),
     },
     async ({ value }) => {
-        const whiteBalance = await canon.setWhiteBalanceSetting(value);
+        const whiteBalance = await canon.setWhiteBalance(value);
         return {
             content: [{ type: 'text', text: JSON.stringify(whiteBalance) }],
         };
@@ -989,7 +989,7 @@ server.tool(
             };
         }
         try {
-            const aebSetting = await canon.getExposureBracketSetting();
+            const aebSetting = await canon.getExposureBracketing();
             return {
                 content: [
                     {
@@ -1031,7 +1031,7 @@ server.tool(
             };
         }
         try {
-            const result = await canon.setExposureBracketSetting(value);
+            const result = await canon.setExposureBracketing(value);
             return {
                 content: [
                     {

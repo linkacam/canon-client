@@ -989,6 +989,97 @@ export class Canon extends Camera {
         return this.directories;
     }
 
+    /**
+     * Deletes a content file from the camera storage.
+     * 
+     * This method sends a DELETE request to remove a specific file from the camera's storage.
+     * The content path should be relative to the camera's content root (e.g., '/ccapi/ver100/contents/sd/100CANON/IMG_0001.JPG').
+     * 
+     * @param contentPath - The path to the content file to delete. Should include the full path from the content root.
+     * @returns Promise<{}> - Returns an empty JSON object on successful deletion.
+     * 
+     * @throws {Error} When the content path is invalid or empty
+     * @throws {Error} When the content file is not found (404)
+     * @throws {Error} When the content cannot be deleted due to protection or card issues (409)
+     * @throws {Error} When the device is busy or in an unsupported mode (503)
+     * @throws {Error} When the network request fails
+     * 
+     * @example
+     * ```typescript
+     * // Delete a specific image file
+     * try {
+     *   await canon.deleteContent('/ccapi/ver100/contents/sd/100CANON/IMG_0001.JPG');
+     *   console.log('File deleted successfully');
+     * } catch (error) {
+     *   console.error('Failed to delete file:', error.message);
+     * }
+     * 
+     * // Delete content from current storage
+     * await canon.deleteContent('/ccapi/ver100/contents/sd/100CANON/somefile.JPG');
+     * ```
+     * 
+     * @see {@link getContents} - To get a list of available contents
+     * @see {@link getCurrentStorage} - To get current storage information
+     */
+    async deleteContent(contentPath: string): Promise<{}> {
+        // Validate input parameter
+        if (!contentPath || typeof contentPath !== 'string') {
+            throw new Error('Content path must be a non-empty string');
+        }
+
+        if (!contentPath.startsWith('/')) {
+            throw new Error('Content path must start with a forward slash (/)');
+        }
+
+        const url = this.baseUrl;
+        const requestUrl = `${url}${contentPath}`;
+
+        try {
+            const response = await fetch(requestUrl, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                let errorMessage: string;
+                let errorData: any = {};
+
+                try {
+                    errorData = await response.json();
+                } catch (parseError) {
+                    // If JSON parsing fails, use status text
+                    errorData = { message: response.statusText };
+                }
+
+                errorMessage = errorData.message || `HTTP ${response.status}: ${response.statusText}`;
+                
+                switch (response.status) {
+                    case 404:
+                        throw new Error(`Content not found: ${errorMessage}`);
+                    case 409:
+                        throw new Error(`Content cannot be deleted: ${errorMessage}`);
+                    case 503:
+                        throw new Error(`Device busy: ${errorMessage}`);
+                    default:
+                        throw new Error(`Failed to delete content (${response.status}): ${errorMessage}`);
+                }
+            }
+
+            // Return empty JSON object as specified in the API
+            return {};
+        } catch (error) {
+            // Re-throw our custom errors
+            if (error instanceof Error) {
+                throw error;
+            }
+            
+            // Handle unexpected errors (network issues, etc.)
+            throw new Error(`Network error while deleting content: ${error}`);
+        }
+    }
+
     async getDeviceInformation(): Promise<CanonDeviceInformation> {
         const url = this.getFeatureUrl('deviceinformation');
 

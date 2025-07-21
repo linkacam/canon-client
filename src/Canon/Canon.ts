@@ -1021,7 +1021,7 @@ export class Canon extends Camera {
      * @see {@link getContents} - To get a list of available contents
      * @see {@link getCurrentStorage} - To get current storage information
      */
-    async deleteContent(contentPath: string): Promise<{}> {
+    async deleteContent(contentPath: string): Promise<boolean> {
         // Validate input parameter
         if (!contentPath || typeof contentPath !== 'string') {
             throw new Error('Content path must be a non-empty string');
@@ -1068,7 +1068,7 @@ export class Canon extends Camera {
             }
 
             // Return empty JSON object as specified in the API
-            return {};
+            return true;
         } catch (error) {
             // Re-throw our custom errors
             if (error instanceof Error) {

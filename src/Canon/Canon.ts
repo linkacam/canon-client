@@ -387,6 +387,21 @@ export enum CanonStillImageAspectRatio {
     ONE_ONE = '1:1',
 }
 
+export interface CanonWifiSetting {
+    ssid: string;
+    method: string;
+    channel: number;
+    authentication: string;
+    encryption: string;
+    network: string;
+}
+
+export interface CanonWifiSettings {
+    wifisetting_set1: CanonWifiSetting;
+    wifisetting_set2: CanonWifiSetting;
+    wifisetting_set3: CanonWifiSetting;
+}
+
 export type CanonEnableDisable = 'enable' | 'disable';
 
 export class Canon extends Camera {
@@ -417,6 +432,8 @@ export class Canon extends Camera {
     intervalInterval: number = 0;
     intervalRepeat: number = 0;
     firmwareVersion?: string;
+    wifiSettings?: CanonWifiSettings;
+    currentConnectionSetting?: CanonValueAbility<string>;
 
     constructor(ipAddress: string, port: number = 443, https: boolean, username?: string, password?: string) {
         super();
@@ -1297,16 +1314,102 @@ export class Canon extends Camera {
         return this.storages;
     }
 
-    async getWifiSetting(): Promise<any> {
-        const url = this.getFeatureUrl('wifisetting');
+    /**
+     * Gets the Wi-Fi connection setting information stored in the Canon camera.
+     * 
+     * This API retrieves the Wi-Fi configuration settings including SSID, connection method,
+     * channel, authentication, encryption, and network settings for up to 3 connection profiles.
+     * 
+     * Note: This API is not supported on Canon cameras that support wired LAN.
+     * 
+     * @returns Promise<CanonWifiSettings> - The Wi-Fi settings for all three connection profiles
+     * @throws {Error} When the API request fails or returns an error response
+     * @throws {Error} When the camera does not support this feature (e.g., wired LAN cameras)
+     * 
+     * @example
+     * ```typescript
+     * const wifiSettings = await canon.getWifiSetting();
+     * console.log('Primary SSID:', wifiSettings.wifisetting_set1.ssid);
+     * console.log('Connection method:', wifiSettings.wifisetting_set1.method);
+     * ```
+     */
+    async getWifiSetting(): Promise<CanonWifiSettings> {
+        try {
+            const feature = this.getFeatureUrl('wifisetting');
+            if (!feature) {
+                throw new Error('Wi-Fi setting feature not supported by this camera');
+            }
 
-        if (!url) {
-            throw new Error('Wifi setting feature not found');
+            const url = this.buildFeatureUrl(feature);
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to get Wi-Fi settings: ${response.status} ${response.statusText} - ${errorText}`);
+            }
+
+            const data: CanonWifiSettings = await response.json();
+            console.log(data);
+            return data;
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(`Failed to get Wi-Fi settings: ${error.message}`);
+            }
+            throw new Error('Failed to get Wi-Fi settings: Unknown error occurred');
         }
+    }
 
-        const response = await fetch(url.path);
+    /**
+     * Gets the current connection settings (SET) that are running and can be changed.
+     * 
+     * This API retrieves the connection settings initiated by CCAPI. It is not supported
+     * on Canon cameras that only support Wi-Fi. Ensure the camera in use supports this feature.
+     * 
+     * @returns Promise<{ value: string; ability: string[] }> - The current connection settings and their abilities
+     * @throws {Error} When the API request fails or returns an error response
+     * @throws {Error} When the camera does not support this feature (e.g., Wi-Fi only cameras)
+     * 
+     * @example
+     * ```typescript
+     * const connectionSettings = await canon.getCurrentConnectionSetting();
+     * console.log('Current Connection Setting:', connectionSettings.value);
+     * console.log('Available Abilities:', connectionSettings.ability);
+     * ```
+     */
+    async getCurrentConnectionSetting(): Promise<CanonValueAbility<string>> {
+        try {
+            const feature = this.getFeatureUrl('networksetting/currentconnectionsetting');
+            if (!feature) {
+                throw new Error('Current connection setting feature not supported by this camera');
+            }
 
-        return response.json();
+            const url = this.buildFeatureUrl(feature);
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to get current connection settings: ${response.status} ${response.statusText} - ${errorText}`);
+            }
+
+            const data: { value: string; ability: string[] } = await response.json();
+            console.log(data);
+            return data;
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(`Failed to get current connection settings: ${error.message}`);
+            }
+            throw new Error('Failed to get current connection settings: Unknown error occurred');
+        }
     }
 
     async sync(callback?: (any?: any) => void, frequency: number = 5) {
@@ -3969,6 +4072,8 @@ export class Canon extends Camera {
             throw error;
         }
     }
+
+    
 }
 
 export default Canon;

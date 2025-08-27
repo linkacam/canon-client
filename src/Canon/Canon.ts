@@ -216,6 +216,20 @@ export interface CanonShootingSettings {
     soundrecording_windfilter?: CanonValueAbility;
     soundrecording_attenuator?: CanonValueAbility;
     shuttermode?: CanonValueAbility;
+    trackingsetting?: CanonValueAbility;
+    stillimagecompression_large?: CanonRangeAbility;
+    stillimagecompression_medium?: CanonRangeAbility;
+    stillimagecompression_medium1?: CanonRangeAbility;
+    stillimagecompression_medium2?: CanonRangeAbility;
+    stillimagecompression_small?: CanonRangeAbility;
+    stillimagecompression_small1?: CanonRangeAbility;
+    stillimagecompression_small2?: CanonRangeAbility;
+    hdr?: CanonValueAbility;
+    antiflickershoot?: CanonValueAbility;
+    hfantiflickershoot?: CanonValueAbility;
+    hfflickertv?: CanonValueAbility;
+    highframerate?: CanonValueAbility;
+    moviecropping?: CanonValueAbility;
 }
 
 export interface CanonEventData extends CanonShootingSettings {
@@ -1224,7 +1238,7 @@ export class Canon extends Camera {
             const timemout = 'immediately';
             fullUrl.searchParams.append('timeout', timemout);
         }
-        //console.log(fullUrl.toString());
+
         const response = await fetch(fullUrl.toString());
 
         return response.json();
@@ -1355,7 +1369,7 @@ export class Canon extends Camera {
             }
 
             const data: CanonWifiSettings = await response.json();
-            console.log(data);
+
             return data;
         } catch (error) {
             if (error instanceof Error) {
@@ -1403,7 +1417,7 @@ export class Canon extends Camera {
             }
 
             const data: { value: string; ability: string[] } = await response.json();
-            console.log(data);
+
             return data;
         } catch (error) {
             if (error instanceof Error) {
@@ -2139,17 +2153,20 @@ export class Canon extends Camera {
      * @returns {Promise<Partial<CanonShootingSettings>>} Object containing all shooting settings
      */
     async getShootingSettings(): Promise<Partial<CanonShootingSettings>> {
-        const endpoint = this.getFeatureUrl('shooting/settings');
+        const endpoint = this.getFeatureUrlsOfVersions('shooting/settings', ['ver100', 'ver110']);
 
         if (!endpoint) {
             throw new Error('Shooting settings feature not found');
         }
 
-        const response = await fetch(endpoint.path);
+        const responses = await Promise.all(endpoint.map(ep => fetch(ep.path)));
+        const data = await Promise.all(responses.map(response => response.json() as Promise<CanonShootingSettings>));
 
-        const data = await response.json() as CanonShootingSettings;
+        const mergedData = data.reduce((acc, current) => {
+            return { ...acc, ...current };
+        }, {});
 
-        this.shootingSettings = data;
+        this.shootingSettings = mergedData;
 
         return this.shootingSettings;
     }
@@ -3169,8 +3186,11 @@ export class Canon extends Camera {
     }
 
     private getFeatureUrl(feature: string): ApiEndpoint | undefined {
-        for (const version in this.features) {
-            const endpoints = this.features[version];
+        // sort the keys DESC
+        const sortedKeys = Object.keys(this.features!).sort((a, b) => b.localeCompare(a));
+
+        for (const version of sortedKeys) {
+            const endpoints = this.features![version];
             const endpoint = endpoints.find((ep) => ep.path.includes(feature));
 
             if (endpoint) {
@@ -3180,6 +3200,25 @@ export class Canon extends Camera {
                 return endpoint;
             }
         }
+    }
+
+    private getFeatureUrlsOfVersions(feature: string, versions: string[]): ApiEndpoint[] | undefined {
+        const sortedKeys = versions.sort((a, b) => b.localeCompare(a));
+        const endpoints: ApiEndpoint[] = [];
+        for (const version of sortedKeys) {
+            const apis = this.features![version];
+            const endpoint = apis.find((ep) => ep.path.includes(feature));
+
+            if (!endpoint) {
+                continue;
+            }
+
+            endpoint.path = this.buildFeatureUrl(endpoint);
+            // get the version from the path
+            endpoint.version = version;
+            endpoints.push(endpoint);
+        }
+        return endpoints;
     }
 
     /**

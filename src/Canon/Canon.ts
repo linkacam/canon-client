@@ -215,6 +215,7 @@ export interface CanonShootingSettings {
     soundrecording_level?: CanonValueAbility;
     soundrecording_windfilter?: CanonValueAbility;
     soundrecording_attenuator?: CanonValueAbility;
+    shuttermode?: CanonValueAbility;
 }
 
 export interface CanonEventData extends CanonShootingSettings {
@@ -4073,7 +4074,48 @@ export class Canon extends Camera {
         }
     }
 
-    
+    /**
+     * Format the storage card.
+     *
+     * Makes a POST request to /functions/cardformat to format the storage card.
+     *
+     * @param name - The storage name to format (e.g. "card1")
+     * @returns {Promise<void>} Resolves when the card is successfully formatted
+     * @throws {Error} When invalid parameter, card not available, card protected, device is busy, or mode not supported
+     */
+    async formatCard(name: string): Promise<void> {
+        const endpoint = this.getFeatureUrl('functions/cardformat');
+        if (!endpoint) {
+            throw new Error('Card format feature not found');
+        }
+        try {
+            const response = await fetch(endpoint.path, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name }),
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                if (response.status === 400) {
+                    throw new Error(error.message || 'Invalid parameter - name must be a valid storage name');
+                }
+                if (response.status === 409) {
+                    throw new Error(error.message || 'Card not available or card protected');
+                }
+                if (response.status === 503) {
+                    throw new Error(error.message || 'Device busy, during shooting/recording, or mode not supported');
+                }
+                throw new Error(`Failed to format card: ${response.status} ${response.statusText}`);
+            }
+        } catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
+            throw new Error('Failed to format card');
+        }
+    }
 }
 
 export default Canon;

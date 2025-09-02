@@ -26,16 +26,30 @@ interface CanonContents {
     path: string[];
 }
 
-interface CanonMessage {
-    message: string;
-}
-
 interface CanonDeviceInformation {
+    /**
+     * Manufacturer
+     */
     manufacturer: string;
+    /**
+     * Product name
+     */
     productname: string;
+    /**
+     * GUID
+     */
     guid: string;
+    /**
+     * Serial number
+     */
     serialnumber: string;
+    /**
+     * Firmware version
+     */
     firmwareversion: string;
+    /**
+     * MAC address
+     */
     macaddress: string;
 }
 
@@ -72,13 +86,34 @@ interface CanonLiveViewFlipDetailResponse {
     };
 }
 
-interface CanonStorageStatus {
+export interface CanonStorageStatus {
+    /**
+     * List of storage devices
+     */
     storagelist: {
+        /**
+         * Name of the storage device
+         */
         name: string;
+        /**
+         * URL of the storage device
+         */
         url: string;
+        /**
+         * Access capability of the storage device
+         */
         accesscapability: string;
+        /**
+         * Maximum storage space (bytes)
+         */
         maxsize: number;
+        /**
+         * Available storage space (bytes)
+         */
         spacesize: number;
+        /**
+         * Number of contents
+         */
         contentsnumber: number;
     }[];
 }
@@ -102,11 +137,6 @@ interface CanonLiveViewImageFlipDetail {
     image?: string;
 }
 
-interface CanonSetting {
-    value: string;
-    ability: string[];
-}
-
 interface CanonExposureCompensationSetting {
     value: string;
     ability: string[];
@@ -117,25 +147,12 @@ export interface CanonWhiteBalanceSetting {
     ability: string[];
 }
 
-interface CanonColorTemperatureSetting {
-    value: number;
-    ability: {
-        min: number;
-        max: number;
-        step: number;
-    };
-}
-
 export enum CanonHDRMode {
     OFF = 'off',
     PQ = 'pq',
 }
 
 export interface CanonHdrMode {
-    value: string;
-    ability: string[];
-}
-interface CanonShootingModeSetting {
     value: string;
     ability: string[];
 }
@@ -171,64 +188,299 @@ export interface CanonImageQualitySetting {
 }
 
 export interface CanonShootingSettings {
+    /**
+     * Shooting mode (models without a shooting mode dial)
+     */
     shootingmode?: CanonValueAbility;
+
+    /**
+     * Shooting mode (models with a shooting mode dial)
+     */
     shootingmodedial?: CanonValueAbility;
+
+    /**
+     * Movie recording mode (models without a shooting mode dial)
+     */
     shootingmodedial_movie?: CanonValueAbility;
+
+    /**
+     * Aperture (AV)
+     */
     av?: CanonValueAbility;
+
+    /**
+     * Shutter speed (TV)
+     */
     tv?: CanonValueAbility;
+
+    /**
+     * ISO
+     */
     iso?: CanonValueAbility;
+
+    /**
+     * Exposure compensation
+     */
     exposure?: CanonValueAbility;
+
+    /**
+     * White balance
+     */
     wb?: CanonValueAbility;
+
+    /**
+     * Color temperature
+     */
     colortemperature?: CanonRangeAbility;
+
+    /**
+     * AF operation
+     */
     afoperation?: CanonValueAbility;
+
+    /**
+     * AF method
+     */
     afmethod?: CanonValueAbility;
+
+    /**
+     * Still image shooting image quality
+     */
     stillimagequality?: CanonImageQualitySetting;
+
+    /**
+     * Still image aspect ratio
+     */
     stillimageaspectratio?: CanonValueAbility;
+
+    /**
+     * Flash
+     */
     flash?: CanonValueAbility;
+
+    /**
+     * Metering mode
+     */
     metering?: CanonValueAbility;
+
+    /**
+     * Continuous shooting mode
+     */
     drive?: CanonValueAbility;
+
+    /**
+     * Exposure bracket
+     */
     aeb?: CanonValueAbility;
+
+    /**
+     * Focus bracketing
+     */
     focusbracketing?: CanonValueAbility;
+
+    /**
+     * Focus bracketing exposure smoothing
+     */
     focusbracketing_exposuresmoothing?: CanonValueAbility;
+
+    /**
+     * Focus bracketing focus increment
+     */
     focusbracketing_focusincrement?: CanonValueAbility;
+
+    /**
+     * Focus bracketing number of shots
+     */
     focusbracketing_numberofshots?: CanonValueAbility;
+
+    /**
+     * WB shift
+     */
     wbshift?: CanonValueAbility;
+
+    /**
+     * WB bracket
+     */
     wbbracket?: CanonValueAbility;
+
+    /**
+     * Color space
+     */
     colorspace?: CanonValueAbility;
+
+    /**
+     * Picture style kind
+     */
     picturestyle?: CanonValueAbility;
+
+    /**
+     * Picture style (auto)
+     */
     picturestyle_auto?: CanonValueAbility;
+
+    /**
+     * Picture style (standard)
+     */
     picturestyle_standard?: CanonValueAbility;
+
+    /**
+     * Picture style (portrait)
+     */
     picturestyle_portrait?: CanonValueAbility;
+
+    /**
+     * Picture style (landscape)
+     */
     picturestyle_landscape?: CanonValueAbility;
+
+    /**
+     * Picture style (finedetail)
+     */
     picturestyle_finedetail?: CanonValueAbility;
+
+    /**
+     * Picture style (neutral)
+     */
     picturestyle_neutral?: CanonValueAbility;
+
+    /**
+     * Picture style (faithful)
+     */
     picturestyle_faithful?: CanonValueAbility;
+
+    /**
+     * Picture style (monochrome)
+     */
     picturestyle_monochrome?: CanonValueAbility;
+
+    /**
+     * Picture style (userdef1)
+     */
     picturestyle_userdef1?: CanonValueAbility;
+
+    /**
+     * Base picture style (userdef1)
+     */
     picturestyle_userdef1_basepicturestyle?: CanonValueAbility;
+
+    /**
+     * Picture style (userdef2)
+     */
     picturestyle_userdef2?: CanonValueAbility;
+
+    /**
+     * Base picture style (userdef2)
+     */
     picturestyle_userdef2_basepicturestyle?: CanonValueAbility;
+
+    /**
+     * Picture style (userdef3)
+     */
     picturestyle_userdef3?: CanonValueAbility;
+
+    /**
+     * Base picture style (userdef3)
+     */
     picturestyle_userdef3_basepicturestyle?: CanonValueAbility;
+
+    /**
+     * Movie recording image quality
+     */
     moviequality?: CanonValueAbility;
+
+    /**
+     * Sound recording settings
+     */
     soundrecording?: CanonValueAbility;
+
+    /**
+     * Sound recording level
+     */
     soundrecording_level?: CanonValueAbility;
+
+    /**
+     * Wind filter
+     */
     soundrecording_windfilter?: CanonValueAbility;
+
+    /**
+     * Attenuator
+     */
     soundrecording_attenuator?: CanonValueAbility;
+
+    /**
+     * Shutter mode
+     */
     shuttermode?: CanonValueAbility;
+
+    /**
+     * Tracking setting
+     */
     trackingsetting?: CanonValueAbility;
+
+    /**
+     * Still image compression (large)
+     */
     stillimagecompression_large?: CanonRangeAbility;
+
+    /**
+     * Still image compression (medium)
+     */
     stillimagecompression_medium?: CanonRangeAbility;
+
+    /**
+     * Still image compression (medium1)
+     */
     stillimagecompression_medium1?: CanonRangeAbility;
+
+    /**
+     * Still image compression (medium2)
+     */
     stillimagecompression_medium2?: CanonRangeAbility;
+
+    /**
+     * Still image compression (small)
+     */
     stillimagecompression_small?: CanonRangeAbility;
+
+    /**
+     * Still image compression (small1)
+     */
     stillimagecompression_small1?: CanonRangeAbility;
+
+    /**
+     * Still image compression (small2)
+     */
     stillimagecompression_small2?: CanonRangeAbility;
+
+    /**
+     * HDR
+     */
     hdr?: CanonValueAbility;
+
+    /**
+     * Anti-flicker shoot
+     */
     antiflickershoot?: CanonValueAbility;
+
+    /**
+     * High-frequency anti-flicker shoot
+     */
     hfantiflickershoot?: CanonValueAbility;
+
+    /**
+     * High-frequency flicker TV
+     */
     hfflickertv?: CanonValueAbility;
+
+    /**
+     * High frame rate
+     */
     highframerate?: CanonValueAbility;
+
+    /**
+     * Movie cropping
+     */
     moviecropping?: CanonValueAbility;
 }
 
@@ -236,14 +488,37 @@ export interface CanonEventData extends CanonShootingSettings {
     addedcontents: string[];
 }
 
+/**
+ * Enum representing the different content types supported by Canon cameras.
+ * These values are used to filter content when retrieving files from the camera.
+ */
 export enum CanonContentType {
+    /** All content types (Default when type is not designated) */
     ALL = 'all',
+
+    /** JPEG image files */
     JPEG = 'jpeg',
+
+    /** HEIF (High Efficiency Image Format) files */
+    HEIF = 'hif',
+
+    /** Canon RAW version 2 files */
     CR2 = 'cr2',
+
+    /** Canon RAW version 3 files */
     CR3 = 'cr3',
+
+    /** WAV audio files */
     WAV = 'wav',
+
+    /** MP4 video files */
     MP4 = 'mp4',
+
+    /** MOV video files */
     MOV = 'mov',
+
+    /** CRM (Canon RAW Movie) files */
+    CRM = 'crm',
 }
 
 enum CanonFeatures {
@@ -438,10 +713,6 @@ export class Canon extends Camera {
     shootingMode?: string;
     ignoreShootingModeDial: boolean = false;
     shootingSettings?: CanonShootingSettings;
-    // aperture?: CanonValueAbility;
-    // shutterSpeed?: CanonValueAbility;
-    // iso?: CanonValueAbility;
-    // autoFocusSetting?: string;
     lensInformation?: CanonLensInformation;
     intervalMode: boolean = false;
     intervalInterval: number = 0;
@@ -479,13 +750,13 @@ export class Canon extends Camera {
             this.currentDirectory = await this.getCurrentDirectory();
             const deviceInformation = await this.getDeviceInformation();
             this.shootingSettings = await this.getShootingSettings();
+
             this.manufacturer = deviceInformation.manufacturer;
             this.modelName = deviceInformation.productname;
             this.serialNumber = deviceInformation.serialnumber;
             this.firmwareVersion = deviceInformation.firmwareversion;
             this.macAddress = deviceInformation.macaddress;
             this.lensInformation = await this.getLensInformation();
-
 
             if (startLiveView) {
                 await this.startLiveView(CanonLiveViewSize.SMALL, 'keep');
@@ -574,6 +845,124 @@ export class Canon extends Camera {
 
             // If no full JPEG found, keep buffer and continue
         }
+    }
+
+    /**
+     * Helper to parse Canon chunked directory contents stream.
+     * 
+     * Processes a ReadableStream containing JSON objects that represent directory contents
+     * from Canon cameras. The stream may contain multiple JSON objects, some complete
+     * and some partial. This function extracts complete JSON frames and parses them
+     * to collect file paths and error messages.
+     *
+     * @param stream - ReadableStream containing chunked JSON data from Canon camera
+     * @returns Promise resolving to an object containing arrays of paths and errors
+     * @throws No explicit throws - parsing errors are logged but don't interrupt processing
+     * 
+     * Example usage:
+     * ```typescript
+     * const stream = // ... get stream from Canon API
+     * const { paths, errors } = await Canon.parseCanonChunkedContentsStream(stream);
+     * console.log('Found paths:', paths);
+     * console.log('Errors:', errors);
+     * ```
+     */
+    public static async parseCanonChunkedContentsStream(
+        stream: ReadableStream<Uint8Array>
+    ): Promise<{ paths: string[]; errors: string[] }> {
+        const reader = stream.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let textBuffer = '';
+        const paths: string[] = [];
+        const errors: string[] = [];
+
+        function extractFrames(input: string): { frames: string[]; rest: string } {
+            const frames: string[] = [];
+            let inString = false;
+            let escapeNext = false;
+            let depth = 0;
+            let startIndex = -1;
+
+            for (let i = 0; i < input.length; i++) {
+                const ch = input[i];
+
+                if (inString) {
+                    if (escapeNext) {
+                        escapeNext = false;
+                    } else if (ch === '\\') {
+                        escapeNext = true;
+                    } else if (ch === '"') {
+                        inString = false;
+                    }
+                    continue;
+                }
+
+                if (ch === '"') {
+                    inString = true;
+                    continue;
+                }
+
+                if (ch === '{') {
+                    if (depth === 0) {
+                        startIndex = i;
+                    }
+                    depth++;
+                } else if (ch === '}') {
+                    depth--;
+                    if (depth === 0 && startIndex !== -1) {
+                        frames.push(input.slice(startIndex, i + 1));
+                        startIndex = -1;
+                    }
+                }
+            }
+
+            const rest = depth > 0 && startIndex !== -1 ? input.slice(startIndex) : '';
+            return { frames, rest };
+        }
+
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            if (!value) continue;
+
+            textBuffer += decoder.decode(value, { stream: true });
+            const { frames, rest } = extractFrames(textBuffer);
+            textBuffer = rest;
+
+            for (const frame of frames) {
+                try {
+                    const obj = JSON.parse(frame);
+                    if (Array.isArray(obj?.path)) {
+                        for (const p of obj.path) {
+                            if (typeof p === 'string') paths.push(p);
+                        }
+                    } else if (typeof obj?.message === 'string') {
+                        errors.push(obj.message);
+                    }
+                } catch (e) {
+                    // If a frame fails to parse, skip it and continue
+                    console.warn('Failed to parse chunked contents frame', e);
+                }
+            }
+        }
+
+        // Flush any remaining buffered bytes
+        if (textBuffer.trim().length > 0) {
+            try {
+                const obj = JSON.parse(textBuffer);
+                if (Array.isArray(obj?.path)) {
+                    for (const p of obj.path) {
+                        if (typeof p === 'string') paths.push(p);
+                    }
+                } else if (typeof obj?.message === 'string') {
+                    errors.push(obj.message);
+                }
+            } catch {
+                // ignore trailing incomplete buffer
+            }
+        }
+
+        return { paths, errors };
     }
 
     /**
@@ -939,16 +1328,21 @@ export class Canon extends Camera {
         }
     }
 
-    async getContentsNumber(directoryPath: string) {
+    async getDirectoryContentsNumber(directoryPath: string) {
         const contents = await this.getContents({
             directoryPath,
-            type: CanonContentType.JPEG,
+            type: CanonContentType.ALL,
             kind: 'number',
         });
 
+        const { contentsnumber, pagenumber } = (await contents.json()) as {
+            contentsnumber: number;
+            pagenumber: number;
+        };
+
         return {
-            contentsNumber: contents.contentsnumber,
-            pageNumber: contents.pagenumber,
+            contentsNumber: contentsnumber,
+            pageNumber: pagenumber,
         };
     }
 
@@ -976,6 +1370,17 @@ export class Canon extends Camera {
         return response.json();
     }
 
+    /**
+     * Get list of contents URLs
+     *
+     * Makes a GET request to the given directory path to retrieve a list of content URLs
+     *
+     * @param directoryPath - The path to the directory to get contents from
+     * @param type - The type of content to get (JPEG, HEIF, CR2, CR3, WAV, MP4, MOV, CRM)
+     * @param kind - The kind of content to get (list, chunked, number)
+     * @param order - The order of the content to get (asc, desc)
+     * @param page - The page number to get (default is 0)
+     */
     async getContents({
         directoryPath,
         type,
@@ -985,8 +1390,8 @@ export class Canon extends Camera {
     }: {
         directoryPath: string;
         type?: CanonContentType;
-        kind?: string;
-        order?: string;
+        kind?: 'list' | 'chunked' | 'number';
+        order?: 'asc' | 'desc';
         page?: number;
     }) {
         const url = this.baseUrl;
@@ -1006,11 +1411,75 @@ export class Canon extends Camera {
         }
         const requestUrl = fullUrl.toString();
 
-        const response = await fetch(requestUrl);
-
-        return response.json();
+        if (kind === 'chunked') {
+            return fetch(requestUrl, {
+                headers: { 'Content-Type': 'application/octet-stream' },
+            });
+        } else {
+            return fetch(requestUrl);
+        }
     }
 
+    /**
+     * Get directory contents in chunked format from the camera.
+     *
+     * Makes a GET request to retrieve directory contents as an octet stream with chunked transfer encoding.
+     * Each chunk contains JSON objects with content paths (max 100 items per chunk).
+     *
+     * When successful, chunks contain:
+     * ```json
+     * {
+     *   "path": [
+     *     "/ccapi/ver140/contents/card1/DCIM/100CANON/IMG_0001.JPG",
+     *     "/ccapi/ver140/contents/card1/DCIM/100CANON/IMG_0002.JPG"
+     *   ]
+     * }
+     * ```
+     *
+     * When an error occurs during transmission:
+     * ```json
+     * {
+     *   "message": "During shooting or recording"
+     * }
+     * ```
+     *
+     * @param directoryPath - The path to the directory to get contents from
+     * @param type - The type of content to get (JPEG, HEIF, CR2, CR3, WAV, MP4, MOV, CRM)
+     * @param order - The order of the content to get (asc, desc)
+     * @param page - The page number to get (default is 0)
+     * @returns A ReadableStream containing chunked JSON data with content paths
+     * @throws Error if the request fails or directory is not found
+     *
+     * @example
+     * ```typescript
+     * const stream = await canon.getDirectoryContentsChunked({
+     *   directoryPath: '/ccapi/ver140/contents/card1/DCIM/100CANON',
+     *   type: CanonContentType.JPEG,
+     *   order: 'desc'
+     * });
+     * ```
+     */
+    async getDirectoryContentsChunked({
+        directoryPath,
+        type,
+        order,
+        page,
+    }: {
+        directoryPath: string;
+        type?: CanonContentType;
+        order?: 'asc' | 'desc';
+        page?: number;
+    }): Promise<ReadableStream<Uint8Array> | null> {
+        const response = await this.getContents({
+            directoryPath,
+            kind: 'chunked',
+            type,
+            order,
+            page,
+        });
+
+        return response.body;
+    }
     async getDirectories(storagePath: string) {
         const url = this.baseUrl;
 
@@ -1023,19 +1492,19 @@ export class Canon extends Camera {
 
     /**
      * Deletes a content file from the camera storage.
-     * 
+     *
      * This method sends a DELETE request to remove a specific file from the camera's storage.
      * The content path should be relative to the camera's content root (e.g., '/ccapi/ver100/contents/sd/100CANON/IMG_0001.JPG').
-     * 
+     *
      * @param contentPath - The path to the content file to delete. Should include the full path from the content root.
      * @returns Promise<{}> - Returns an empty JSON object on successful deletion.
-     * 
+     *
      * @throws {Error} When the content path is invalid or empty
      * @throws {Error} When the content file is not found (404)
      * @throws {Error} When the content cannot be deleted due to protection or card issues (409)
      * @throws {Error} When the device is busy or in an unsupported mode (503)
      * @throws {Error} When the network request fails
-     * 
+     *
      * @example
      * ```typescript
      * // Delete a specific image file
@@ -1045,11 +1514,11 @@ export class Canon extends Camera {
      * } catch (error) {
      *   console.error('Failed to delete file:', error.message);
      * }
-     * 
+     *
      * // Delete content from current storage
      * await canon.deleteContent('/ccapi/ver100/contents/sd/100CANON/somefile.JPG');
      * ```
-     * 
+     *
      * @see {@link getContents} - To get a list of available contents
      * @see {@link getCurrentStorage} - To get current storage information
      */
@@ -1086,7 +1555,7 @@ export class Canon extends Camera {
                 }
 
                 errorMessage = errorData.message || `HTTP ${response.status}: ${response.statusText}`;
-                
+
                 switch (response.status) {
                     case 404:
                         throw new Error(`Content not found: ${errorMessage}`);
@@ -1106,7 +1575,7 @@ export class Canon extends Camera {
             if (error instanceof Error) {
                 throw error;
             }
-            
+
             // Handle unexpected errors (network issues, etc.)
             throw new Error(`Network error while deleting content: ${error}`);
         }
@@ -1331,16 +1800,16 @@ export class Canon extends Camera {
 
     /**
      * Gets the Wi-Fi connection setting information stored in the Canon camera.
-     * 
+     *
      * This API retrieves the Wi-Fi configuration settings including SSID, connection method,
      * channel, authentication, encryption, and network settings for up to 3 connection profiles.
-     * 
+     *
      * Note: This API is not supported on Canon cameras that support wired LAN.
-     * 
+     *
      * @returns Promise<CanonWifiSettings> - The Wi-Fi settings for all three connection profiles
      * @throws {Error} When the API request fails or returns an error response
      * @throws {Error} When the camera does not support this feature (e.g., wired LAN cameras)
-     * 
+     *
      * @example
      * ```typescript
      * const wifiSettings = await canon.getWifiSetting();
@@ -1365,7 +1834,9 @@ export class Canon extends Camera {
 
             if (!response.ok) {
                 const errorText = await response.text();
-                throw new Error(`Failed to get Wi-Fi settings: ${response.status} ${response.statusText} - ${errorText}`);
+                throw new Error(
+                    `Failed to get Wi-Fi settings: ${response.status} ${response.statusText} - ${errorText}`
+                );
             }
 
             const data: CanonWifiSettings = await response.json();
@@ -1381,14 +1852,14 @@ export class Canon extends Camera {
 
     /**
      * Gets the current connection settings (SET) that are running and can be changed.
-     * 
+     *
      * This API retrieves the connection settings initiated by CCAPI. It is not supported
      * on Canon cameras that only support Wi-Fi. Ensure the camera in use supports this feature.
-     * 
+     *
      * @returns Promise<{ value: string; ability: string[] }> - The current connection settings and their abilities
      * @throws {Error} When the API request fails or returns an error response
      * @throws {Error} When the camera does not support this feature (e.g., Wi-Fi only cameras)
-     * 
+     *
      * @example
      * ```typescript
      * const connectionSettings = await canon.getCurrentConnectionSetting();
@@ -1413,7 +1884,9 @@ export class Canon extends Camera {
 
             if (!response.ok) {
                 const errorText = await response.text();
-                throw new Error(`Failed to get current connection settings: ${response.status} ${response.statusText} - ${errorText}`);
+                throw new Error(
+                    `Failed to get current connection settings: ${response.status} ${response.statusText} - ${errorText}`
+                );
             }
 
             const data: { value: string; ability: string[] } = await response.json();
@@ -2148,7 +2621,7 @@ export class Canon extends Camera {
 
     /**
      * Get all of the present values and ability values of the shooting parameters that can be
-     * acquired by Ver.1.0.0 APIs supported by the Canon camera.
+     * acquired by Ver.1.0.0 and Ver.1.1.0 APIs supported by the Canon camera.
      *
      * @returns {Promise<Partial<CanonShootingSettings>>} Object containing all shooting settings
      */
@@ -2159,8 +2632,8 @@ export class Canon extends Camera {
             throw new Error('Shooting settings feature not found');
         }
 
-        const responses = await Promise.all(endpoint.map(ep => fetch(ep.path)));
-        const data = await Promise.all(responses.map(response => response.json() as Promise<CanonShootingSettings>));
+        const responses = await Promise.all(endpoint.map((ep) => fetch(ep.path)));
+        const data = await Promise.all(responses.map((response) => response.json() as Promise<CanonShootingSettings>));
 
         const mergedData = data.reduce((acc, current) => {
             return { ...acc, ...current };
@@ -2702,7 +3175,6 @@ export class Canon extends Camera {
                 headers: { 'Content-Type': 'application/octet-stream' },
             });
 
-            //console.log(response);
             const reader = response.body?.getReader();
             if (!reader) {
                 throw new Error('Response body reader not available');
@@ -3191,14 +3663,16 @@ export class Canon extends Camera {
 
         for (const version of sortedKeys) {
             const endpoints = this.features![version];
-            const endpoint = endpoints.find((ep) => ep.path.includes(feature));
+            const endpoint = endpoints.find((ep) => ep.path.slice(-feature.length) === feature);
 
-            if (endpoint) {
-                endpoint.path = this.buildFeatureUrl(endpoint);
-                // get the version from the path
-                endpoint.version = version;
-                return endpoint;
+            if (!endpoint) {
+                continue;
             }
+
+            endpoint.path = this.buildFeatureUrl(endpoint);
+            // get the version from the path
+            endpoint.version = version;
+            return endpoint;
         }
     }
 
@@ -3207,7 +3681,7 @@ export class Canon extends Camera {
         const endpoints: ApiEndpoint[] = [];
         for (const version of sortedKeys) {
             const apis = this.features![version];
-            const endpoint = apis.find((ep) => ep.path.includes(feature));
+            const endpoint = apis.find((ep) => ep.path.slice(-feature.length) === feature);
 
             if (!endpoint) {
                 continue;

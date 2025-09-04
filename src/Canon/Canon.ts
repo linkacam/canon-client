@@ -152,9 +152,15 @@ export enum CanonHDRMode {
     PQ = 'pq',
 }
 
+
 export interface CanonHdrMode {
     value: string;
     ability: string[];
+}
+
+export enum CanonStatusValue {
+    ON = 'on',
+    OFF = 'off',
 }
 
 // Generic interface for value/ability pattern
@@ -185,6 +191,11 @@ export interface CanonImageQualityAbility {
 export interface CanonImageQualitySetting {
     value: CanonImageQualityValue;
     ability: CanonImageQualityAbility;
+}
+
+export enum CanonMovieRecordingAction {
+    START = 'start',
+    STOP = 'stop'
 }
 
 export interface CanonShootingSettings {
@@ -617,14 +628,32 @@ export enum CanonContentKind {
     INFO = 'info',
 }
 
+/**
+ * Interface for Canon content file information
+ *
+ * Contains metadata about files stored on the camera including size,
+ * protection status, archive status, rotation, rating, modification date,
+ * and playback time for video files.
+ */
 export interface CanonContentInfo {
+    /** File size in bytes */
     filesize: number;
+    /** Protection status - whether the file is protected from deletion */
     protect: 'enable' | 'disable';
+    /** Archive status - whether the file is marked for archiving */
     archive: 'enable' | 'disable';
+    /** Rotation angle in degrees */
     rotate: '0' | '90' | '180' | '270';
+    /** Rating assigned to the file (off for no rating, 1-5 for star ratings) */
     rating: 'off' | '1' | '2' | '3' | '4' | '5';
+    /** Last modified date and time as ISO string */
     lastmodifieddate: string;
+    /**
+     * Play time in seconds for video files
+     * null for non-video files (images, etc.)
+     */
     playtime: number | null;
+    /** HDR status - whether HDR mode was used for capture */
     hdr: 'on' | 'off';
 }
 
@@ -790,6 +819,56 @@ export class Canon extends Camera {
     }
 
     /**
+     * Determines the Canon content type based on a file path's extension.
+     *
+     * This static method extracts the file extension from the provided path and maps it
+     * to the corresponding CanonContentType enum value. The comparison is case-insensitive.
+     *
+     * @param path - The file path (including filename and extension) to analyze
+     * @returns The corresponding CanonContentType enum value:
+     *   - JPEG for .jpg/.jpeg files
+     *   - HEIF for .heif files
+     *   - CR2 for .cr2 files (Canon RAW version 2)
+     *   - CR3 for .cr3 files (Canon RAW version 3)
+     *   - WAV for .wav audio files
+     *   - MP4 for .mp4 video files
+     *   - MOV for .mov video files
+     *   - CRM for .crm files (Canon RAW Movie)
+     *   - ALL for unrecognized extensions (default fallback)
+     *
+     * @example
+     * ```typescript
+     * Canon.getContentType('IMG_001.JPG'); // Returns CanonContentType.JPEG
+     * Canon.getContentType('video.mp4');   // Returns CanonContentType.MP4
+     * Canon.getContentType('file.xyz');    // Returns CanonContentType.ALL
+     * ```
+     */
+    public static getContentType(path: string): CanonContentType {
+        const extension = path.split('.').pop();
+        switch (extension?.toUpperCase()) {
+            case 'JPG':
+            case 'JPEG':
+                return CanonContentType.JPEG;
+            case 'HEIF':
+                return CanonContentType.HEIF;
+            case 'CR2':
+                return CanonContentType.CR2;
+            case 'CR3':
+                return CanonContentType.CR3;
+            case 'WAV':
+                return CanonContentType.WAV;
+            case 'MP4':
+                return CanonContentType.MP4;
+            case 'MOV':
+                return CanonContentType.MOV;
+            case 'CRM':
+                return CanonContentType.CRM;
+            default:
+                return CanonContentType.ALL;
+        }
+    }
+
+    /**
      * Processes a live view stream from the camera by reading chunks of JPEG data.
      * Each chunk starts with a hex size followed by newline, then contains the JPEG bytes.
      * Calls the provided callback with each JPEG frame as a Blob.
@@ -849,7 +928,7 @@ export class Canon extends Camera {
 
     /**
      * Helper to parse Canon chunked directory contents stream.
-     * 
+     *
      * Processes a ReadableStream containing JSON objects that represent directory contents
      * from Canon cameras. The stream may contain multiple JSON objects, some complete
      * and some partial. This function extracts complete JSON frames and parses them
@@ -858,7 +937,7 @@ export class Canon extends Camera {
      * @param stream - ReadableStream containing chunked JSON data from Canon camera
      * @returns Promise resolving to an object containing arrays of paths and errors
      * @throws No explicit throws - parsing errors are logged but don't interrupt processing
-     * 
+     *
      * Example usage:
      * ```typescript
      * const stream = // ... get stream from Canon API
@@ -1952,19 +2031,46 @@ export class Canon extends Camera {
     }
 
     /**
-     * Get content from the camera
+     * Get content from the camera - returns file information as JSON
+     *
+     * @param path - Path to the content file on the camera (e.g. /card1/100CANON/IMG_0001.HIF)
+     * @param kind - Must be CanonContentKind.INFO to get file information
+     * @returns Promise resolving to CanonContentInfo containing file metadata
+     */
+    async getContent(path: string, kind: CanonContentKind.INFO): Promise<CanonContentInfo>;
+
+    /**
+     * Get content from the camera - returns binary content as Blob
+     *
+     * @param path - Path to the content file on the camera (e.g. /card1/100CANON/IMG_0001.HIF)
+     * @param kind - Content kind parameter (main, thumbnail, display, embedded)
+     * @returns Promise resolving to a Blob containing the content data
+     */
+    async getContent(path: string, kind: Exclude<CanonContentKind, CanonContentKind.INFO>): Promise<Blob>;
+
+    /**
+     * Get content from the camera - general overload for when kind type is not narrowed
+     *
+     * @param path - Path to the content file on the camera (e.g. /card1/100CANON/IMG_0001.HIF)
+     * @param kind - Content kind parameter
+     * @returns Promise resolving to a Blob or CanonContentInfo depending on the kind
+     */
+    async getContent(path: string, kind: CanonContentKind): Promise<Blob | CanonContentInfo>;
+
+    /**
+     * Get content from the camera - implementation
      *
      * Makes a GET request to /contents/[storage]/[directory]/[file] to retrieve content.
      * This API is unavailable while shooting, recording, movie mode, or get contents is in progress.
      *
      * @param path - Path to the content file on the camera (e.g. /card1/100CANON/IMG_0001.HIF)
-     * @param kind - Optional content kind parameter:
+     * @param kind - Content kind parameter:
      *   - main: Main data (Default when kind not specified)
      *   - thumbnail: Thumbnail image
      *   - display: Display image
      *   - embedded: Embedded image (RAW only)
      *   - info: File information
-     * @returns Promise resolving to a Blob containing the content data
+     * @returns Promise resolving to a Blob containing the content data or CanonContentInfo for info requests
      * @throws Error when:
      *   - Invalid query parameter (400) - e.g. requesting thumbnail for WAV file
      *   - Content not found (404) - URL not present in storage
@@ -1972,7 +2078,7 @@ export class Canon extends Camera {
      *   - Device busy (503) - Function temporarily unavailable
      *   - During shooting/recording (503) - Function unavailable during capture
      */
-    async getContent(path: string, kind: CanonContentKind = CanonContentKind.MAIN): Promise<Blob> {
+    async getContent(path: string, kind: CanonContentKind): Promise<Blob | CanonContentInfo> {
         const url = new URL(path, this.baseUrl);
         const params = new URLSearchParams();
         if (kind) params.append('kind', kind);
@@ -2003,6 +2109,10 @@ export class Canon extends Camera {
                     default:
                         throw new Error(`HTTP error! status: ${response.status}`);
                 }
+            }
+
+            if (kind === CanonContentKind.INFO) {
+                return response.json();
             }
 
             return response.blob();
@@ -3025,7 +3135,7 @@ export class Canon extends Camera {
      * - Ignore shooting mode dial mode not started
      */
     async setShootingMode(mode: CanonShootingMode): Promise<any> {
-        const endpoint = this.getFeatureUrl('shooting/settings/shootingmode');
+        const endpoint = this.getFeatureUrl('shooting/settings/shootingmodedial');
 
         if (!endpoint) {
             throw new Error('Shooting mode feature not found');
@@ -3120,7 +3230,7 @@ export class Canon extends Camera {
         return this.ignoreShootingModeDial;
     }
 
-    async setIgnoreShootingModeDial(status: boolean): Promise<any> {
+    async setIgnoreShootingModeDial(status: CanonStatusValue): Promise<any> {
         const endpoint = this.getFeatureUrl('shooting/control/ignoreshootingmodedialmode');
 
         if (!endpoint) {
@@ -3129,7 +3239,7 @@ export class Canon extends Camera {
 
         try {
             const body = {
-                action: status ? 'on' : 'off',
+                action: status,
             };
             const response = await fetch(endpoint.path, {
                 method: 'POST',
@@ -3137,7 +3247,7 @@ export class Canon extends Camera {
                 headers: { 'Content-Type': 'application/json' },
             });
             if (response.ok) {
-                this.ignoreShootingModeDial = status;
+                this.ignoreShootingModeDial = status === CanonStatusValue.ON;
                 return status;
             }
         } catch (error) {
@@ -3147,14 +3257,14 @@ export class Canon extends Camera {
 
     async changeShootingMode(mode: CanonShootingMode): Promise<void> {
         if (!this.ignoreShootingModeDial) {
-            await this.setIgnoreShootingModeDial(true);
+            await this.setIgnoreShootingModeDial(CanonStatusValue.ON);
         }
 
         return this.setShootingMode(mode);
     }
 
     async restoreDialMode(): Promise<void> {
-        await this.setIgnoreShootingModeDial(false);
+        await this.setIgnoreShootingModeDial(CanonStatusValue.OFF);
     }
 
     async getLiveViewImageFlipDetail(
@@ -4627,6 +4737,57 @@ export class Canon extends Camera {
                 throw error;
             }
             throw new Error('Failed to format card');
+        }
+    }
+
+    /**
+     * Control movie recording button.
+     *
+     * Makes a POST request to /shooting/control/recbutton to start or stop movie recording.
+     *
+     * @param action - The recording action to perform:
+     *   - "start": Starts movie recording
+     *   - "stop": Stops movie recording
+     * @returns {Promise<void>} Resolves when the recording action is successfully executed
+     * @throws {Error} When:
+     *   - Invalid parameter (400) - action is illegal value, nonexistent, non-string, or unexpected string
+     *   - Invalid parameter (400) - When action is "stop" but movie recording is not in progress
+     *   - Device busy (503) - Function temporarily unavailable
+     *   - During shooting/recording (503) - Function unavailable during capture
+     *   - Mode not supported (503) - Request cannot be made in current mode
+     *   - Service preparation in progress (503) - API called before connection complete
+     *   - Cannot write to card (503) - Data could not be recorded on media during shooting
+     */
+    async controlRecordingButton(action: 'start' | 'stop'): Promise<void> {
+        const endpoint = this.getFeatureUrl('shooting/control/recbutton');
+        if (!endpoint) {
+            throw new Error('Recording button control feature not found');
+        }
+        
+        try {
+            const response = await fetch(endpoint.path, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ action }),
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                if (response.status === 400) {
+                    throw new Error(error.message || 'Invalid parameter - action must be "start" or "stop"');
+                }
+                if (response.status === 503) {
+                    throw new Error(error.message || 'Device busy, during shooting/recording, mode not supported, or cannot write to card');
+                }
+                throw new Error(`Failed to control recording button: ${response.status} ${response.statusText}`);
+            }
+        } catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
+            throw new Error('Failed to control recording button');
         }
     }
 }

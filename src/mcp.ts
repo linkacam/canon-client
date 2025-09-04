@@ -836,7 +836,7 @@ server.tool(
     'Get content from the camera',
     {
         path: z.string().describe('The path to the content to get'),
-        kind: z.nativeEnum(CanonContentKind).optional().describe('The kind of content to get'),
+        kind: z.nativeEnum(CanonContentKind).optional().default(CanonContentKind.DISPLAY).describe('The kind of content to get'),
     },
     async ({ path, kind }) => {
         const content = await canon.getContent(path, kind);

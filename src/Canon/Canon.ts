@@ -163,6 +163,27 @@ export enum CanonStatusValue {
     OFF = 'off',
 }
 
+export enum CanonExposureCompensationValue {
+    MINUS_3_0 = '-3.0',
+    MINUS_2_2_3 = '-2_2/3',
+    MINUS_2_1_3 = '-2_1/3',
+    MINUS_2_0 = '-2.0',
+    MINUS_1_2_3 = '-1_2/3',
+    MINUS_1_1_3 = '-1_1/3',
+    MINUS_1_0 = '-1.0',
+    MINUS_0_2_3 = '-0_2/3',
+    MINUS_0_1_3 = '-0_1/3',
+    PLUS_0_0 = '+0.0',
+    PLUS_0_1_3 = '+0_1/3',
+    PLUS_0_2_3 = '+0_2/3',
+    PLUS_1_0 = '+1.0',
+    PLUS_1_1_3 = '+1_1/3',
+    PLUS_1_2_3 = '+1_2/3',
+    PLUS_2_0 = '+2.0',
+    PLUS_2_1_3 = '+2_1/3',
+    PLUS_2_2_3 = '+2_2/3',
+    PLUS_3_0 = '+3.0',
+}
 // Generic interface for value/ability pattern
 export interface CanonValueAbility<T = string> {
     value: T;
@@ -2591,7 +2612,7 @@ export class Canon extends Camera {
      *               "+1_1/3", "+1_2/3", "+2.0", "+2_1/3", "+2_2/3", "+3.0"]
      * }
      */
-    async getExposureCompensationSetting(): Promise<CanonExposureCompensationSetting> {
+    async getExposureCompensationSetting(): Promise<CanonValueAbility> {
         const endpoint = this.getFeatureUrl('shooting/settings/exposure');
 
         if (!endpoint) {
@@ -2611,7 +2632,7 @@ export class Canon extends Camera {
      * @param value - The exposure compensation value to set (e.g. "+0.0", "-1.0", etc)
      * @returns {Promise<any>} Response from the camera
      */
-    async setExposureCompensationSetting(value: string): Promise<any> {
+    async setExposureCompensationSetting(value: CanonExposureCompensationValue): Promise<any> {
         const endpoint = this.getFeatureUrl('shooting/settings/exposure');
 
         if (!endpoint) {

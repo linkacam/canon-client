@@ -152,7 +152,6 @@ export enum CanonHDRMode {
     PQ = 'pq',
 }
 
-
 export interface CanonHdrMode {
     value: string;
     ability: string[];
@@ -184,6 +183,35 @@ export enum CanonExposureCompensationValue {
     PLUS_2_2_3 = '+2_2/3',
     PLUS_3_0 = '+3.0',
 }
+
+export enum CanonExposureBracketValue {
+    PLUS_0_0 = '+0.0',
+    PLUS_0_1_3 = '+0_1/3',
+    PLUS_0_2_3 = '+0_2/3',
+    PLUS_1_0 = '+1.0',
+    PLUS_1_1_3 = '+1_1/3',
+    PLUS_1_2_3 = '+1_2/3',
+    PLUS_2_0 = '+2.0',
+    PLUS_2_1_3 = '+2_1/3',
+    PLUS_2_2_3 = '+2_2/3',
+    PLUS_3_0 = '+3.0',
+}
+
+export enum CanonContinuousShootingModeValue {
+    SINGLE = 'single',
+    CONT_SUPER_HI = 'cont_super_hi',
+    HIGHSPEED = 'highspeed',
+    CUSTOMHIGHSPEEDCONT = 'customhighspeedcont',
+    CONTINUOUS = 'continuous',
+    LOWSPEED = 'lowspeed',
+    SILENT = 'silent',
+    SILENT_SINGLE = 'silent_single',
+    SILENT_CONTINUOUS = 'silent_continuous',
+    SELF_10SEC = 'self_10sec',
+    SELF_2SEC = 'self_2sec',
+    SELF_CONTINUOUS = 'self_continuous',
+}
+
 // Generic interface for value/ability pattern
 export interface CanonValueAbility<T = string> {
     value: T;
@@ -216,7 +244,7 @@ export interface CanonImageQualitySetting {
 
 export enum CanonMovieRecordingAction {
     START = 'start',
-    STOP = 'stop'
+    STOP = 'stop',
 }
 
 export interface CanonShootingSettings {
@@ -4368,7 +4396,7 @@ export class Canon extends Camera {
      *   "value": "+2.0"
      * }
      */
-    async setExposureBracketing(value: string): Promise<Pick<CanonValueAbility, 'value'>> {
+    async setExposureBracketing(value: CanonExposureBracketValue): Promise<Pick<CanonValueAbility, 'value'>> {
         const endpoint = this.getFeatureUrl('shooting/settings/aeb');
         if (!endpoint) {
             throw new Error('Exposure bracket setting feature not found');
@@ -4481,12 +4509,12 @@ export class Canon extends Camera {
      *
      * Makes a GET request to /shooting/settings/drive to retrieve the current continuous shooting mode value and available options.
      *
-     * @returns {Promise<{value: string, ability: string[]}>} Object containing current continuous shooting mode value and available options.
+     * @returns {Promise<CanonValueAbility>} Object containing current continuous shooting mode value and available options.
      * @throws {Error} When:
      * - Device is busy
      * - Mode not supported
      */
-    async getContinuousShootingMode(): Promise<{ value: string; ability: string[] }> {
+    async getContinuousShootingMode(): Promise<CanonValueAbility> {
         const endpoint = this.getFeatureUrl('shooting/settings/drive');
 
         if (!endpoint) {
@@ -4519,14 +4547,14 @@ export class Canon extends Camera {
      * Makes a PUT request to /shooting/settings/drive to change the continuous shooting mode value.
      *
      * @param value - The continuous shooting mode value to set (e.g. "single", "highspeed", etc).
-     * @returns {Promise<{ value: string }>} Object containing the new continuous shooting mode value.
+     * @returns {Promise<CanonValueAbility>} Object containing the new continuous shooting mode value.
      * @throws {Error} When:
      * - Invalid parameter
      * - Device is busy
      * - During shooting/recording
      * - Mode not supported
      */
-    async setContinuousShootingMode(value: string): Promise<{ value: string }> {
+    async setContinuousShootingMode(value: CanonContinuousShootingModeValue): Promise<CanonValueAbility> {
         const endpoint = this.getFeatureUrl('shooting/settings/drive');
 
         if (!endpoint) {
@@ -4784,7 +4812,7 @@ export class Canon extends Camera {
         if (!endpoint) {
             throw new Error('Recording button control feature not found');
         }
-        
+
         try {
             const response = await fetch(endpoint.path, {
                 method: 'POST',
@@ -4793,14 +4821,17 @@ export class Canon extends Camera {
                 },
                 body: JSON.stringify({ action }),
             });
-            
+
             if (!response.ok) {
                 const error = await response.json();
                 if (response.status === 400) {
                     throw new Error(error.message || 'Invalid parameter - action must be "start" or "stop"');
                 }
                 if (response.status === 503) {
-                    throw new Error(error.message || 'Device busy, during shooting/recording, mode not supported, or cannot write to card');
+                    throw new Error(
+                        error.message ||
+                            'Device busy, during shooting/recording, mode not supported, or cannot write to card'
+                    );
                 }
                 throw new Error(`Failed to control recording button: ${response.status} ${response.statusText}`);
             }

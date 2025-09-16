@@ -11,6 +11,7 @@ import {
     Canon,
     CanonContentKind,
     CanonEnableDisable,
+    CanonExposureBracketValue,
     CanonFlashMode,
     CanonHDRMode,
     CanonJpegQuality,
@@ -1031,7 +1032,7 @@ server.tool(
             };
         }
         try {
-            const result = await canon.setExposureBracketing(value);
+            const result = await canon.setExposureBracketing(value as CanonExposureBracketValue);
             return {
                 content: [
                     {

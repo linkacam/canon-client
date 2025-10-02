@@ -137,11 +137,6 @@ interface CanonLiveViewImageFlipDetail {
     image?: string;
 }
 
-interface CanonExposureCompensationSetting {
-    value: string;
-    ability: string[];
-}
-
 export interface CanonWhiteBalanceSetting {
     value: string;
     ability: string[];
@@ -212,15 +207,17 @@ export enum CanonContinuousShootingModeValue {
     SELF_CONTINUOUS = 'self_continuous',
 }
 
-// Generic interface for value/ability pattern
-export interface CanonValueAbility<T = string> {
+export interface CanonValue<T = string> {
     value: T;
+}
+
+// Generic interface for value/ability pattern
+export interface CanonValueAbility<T = string> extends CanonValue<T> {
     ability: string[];
 }
 
 // Generic interface for range ability pattern
-export interface CanonRangeAbility<T = number> {
-    value: T;
+export interface CanonRangeAbility<T = number> extends CanonValue<T> {
     ability: {
         min: number;
         max: number;
@@ -4859,7 +4856,7 @@ export class Canon extends Camera {
      *   - Invalid parameter (400): directory name is illegal, nonexistent, non-string, not 5 chars or empty, or contains illegal characters
      *   - Device busy (503): Function temporarily unavailable, shooting/recording in progress, or mode not supported
      */
-    async createDirectory(directoryName?: string): Promise<string> {
+    async createDirectory(directoryName?: string): Promise<{ [key: string]: string }> {
         const endpoint = this.getFeatureUrl('functions/directory/createdirectory');
         if (!endpoint) {
             throw new Error('Create directory feature not found');
@@ -4867,7 +4864,7 @@ export class Canon extends Camera {
 
         // Prepare request body
         let body: any = {};
-        if (directoryName !== undefined && directoryName !== null && directoryName !== "") {
+        if (directoryName !== undefined && directoryName !== null && directoryName !== '') {
             body.directoryname = directoryName;
         }
 
@@ -4890,16 +4887,16 @@ export class Canon extends Camera {
                     throw new Error(errorBody.message || 'Invalid parameter for directory name');
                 }
                 if (response.status === 503) {
-                    throw new Error(errorBody.message || 'Device busy, shooting/recording in progress, or mode not supported');
+                    throw new Error(
+                        errorBody.message || 'Device busy, shooting/recording in progress, or mode not supported'
+                    );
                 }
                 throw new Error(errorMsg);
             }
 
             const data = await response.json();
-            if (!data || typeof data.directoryname !== 'string') {
-                throw new Error('Unexpected response from camera when creating directory');
-            }
-            return data.directoryname;
+
+            return data;
         } catch (error) {
             if (error instanceof Error) {
                 throw error;
@@ -4910,15 +4907,15 @@ export class Canon extends Camera {
 
     /**
      * Sets (creates) a new directory on the camera.
-     * 
+     *
      * This method sends a POST request to the camera to create a new directory.
      * If the directory name is not specified, the camera will use its default naming.
-     * 
+     *
      * @param directoryName - The name of the directory to create (5 uppercase letters/numbers/underscores, or empty for default)
      * @returns The name of the created directory as returned by the camera
      * @throws Error if the request fails, the parameter is invalid, or the device is busy
      */
-    public async selectDirectory(directoryName?: string): Promise<string> {
+    public async changeDirectory(directoryName?: string): Promise<CanonValue<string>> {
         const endpoint = this.getFeatureUrl('functions/directory/directoryselection');
         if (!endpoint) {
             throw new Error('Select directory feature not found');
@@ -4926,13 +4923,13 @@ export class Canon extends Camera {
 
         // Prepare request body
         let body: any = {};
-        if (directoryName !== undefined && directoryName !== null && directoryName !== "") {
+        if (directoryName !== undefined && directoryName !== null && directoryName !== '') {
             body.value = directoryName;
         }
 
         try {
             const response = await fetch(endpoint.path, {
-                method: 'POST',
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -4949,7 +4946,9 @@ export class Canon extends Camera {
                     throw new Error(errorBody.message || 'Invalid parameter for directory name');
                 }
                 if (response.status === 503) {
-                    throw new Error(errorBody.message || 'Device busy, shooting/recording in progress, or mode not supported');
+                    throw new Error(
+                        errorBody.message || 'Device busy, shooting/recording in progress, or mode not supported'
+                    );
                 }
                 throw new Error(errorMsg);
             }
@@ -4968,17 +4967,47 @@ export class Canon extends Camera {
     }
 
     /**
-     * Gets the name of the most recently created directory on the camera.
-     * 
-     * This method sends a POST request with an empty body to the camera, which will create a new directory
-     * using the camera's default naming and return the directory name.
-     * 
+     * This gets present value and ability values of selected directory configured on your Canon camera.
+     *
+     * This method sends a GET request to the camera, which will return the present value and ability values of selected directory configured on your Canon camera.
      * @returns The name of the created directory as returned by the camera
      * @throws Error if the request fails or the device is busy
      */
-    public async getDirectory(): Promise<string> {
-        // This operation is essentially the same as setDirectory() with no directoryName
-        return this.selectDirectory();
+    public async getDirectory(): Promise<CanonValueAbility<string>> {
+        const endpoint = this.getFeatureUrl('functions/directory/directoryselection');
+        if (!endpoint) {
+            throw new Error('Get directory feature not found');
+        }
+
+        try {
+            const response = await fetch(endpoint.path, {
+                method: 'GET',
+            });
+
+            if (!response.ok) {
+                let errorMsg = `Failed to get directory: ${response.status} ${response.statusText}`;
+                let errorBody: any = {};
+                try {
+                    errorBody = await response.json();
+                } catch (_) {}
+                if (response.status === 400) {
+                    throw new Error(errorBody.message || 'Invalid parameter for directory');
+                }
+                if (response.status === 503) {
+                    throw new Error(
+                        errorBody.message || 'Device busy, shooting/recording in progress, or mode not supported'
+                    );
+                }
+                throw new Error(errorMsg);
+            }
+
+            return response.json();
+        } catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
+            throw new Error('Failed to get directory');
+        }
     }
 }
 

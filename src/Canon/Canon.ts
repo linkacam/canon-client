@@ -892,7 +892,7 @@ export class Canon extends Camera {
      * Canon.getContentType('file.xyz');    // Returns CanonContentType.ALL
      * ```
      */
-    public static getContentType(path: string): CanonContentType {
+    public static getContentTypeFromExtension(path: string): CanonContentType | null {
         const extension = path.split('.').pop();
         switch (extension?.toUpperCase()) {
             case 'JPG':
@@ -913,7 +913,7 @@ export class Canon extends Camera {
             case 'CRM':
                 return CanonContentType.CRM;
             default:
-                return CanonContentType.ALL;
+                return null;
         }
     }
 
@@ -4841,6 +4841,144 @@ export class Canon extends Camera {
             }
             throw new Error('Failed to control recording button');
         }
+    }
+
+    /**
+     * Creates a new directory on the camera.
+     *
+     * This method sends a POST request to the camera's createdirectory endpoint to create a new directory.
+     * If the directory name is not specified, the camera will use its default directory name.
+     *
+     * Directory name requirements:
+     *   - ASCII character codes only (uppercase alphabets/numbers/underscores)
+     *   - 5 characters or empty string
+     *
+     * @param directoryName - The name of the directory to create (optional). If omitted or empty, the camera will use its default.
+     * @returns {Promise<string>} Resolves with the created directory name.
+     * @throws {Error} When:
+     *   - Invalid parameter (400): directory name is illegal, nonexistent, non-string, not 5 chars or empty, or contains illegal characters
+     *   - Device busy (503): Function temporarily unavailable, shooting/recording in progress, or mode not supported
+     */
+    async createDirectory(directoryName?: string): Promise<string> {
+        const endpoint = this.getFeatureUrl('functions/directory/createdirectory');
+        if (!endpoint) {
+            throw new Error('Create directory feature not found');
+        }
+
+        // Prepare request body
+        let body: any = {};
+        if (directoryName !== undefined && directoryName !== null && directoryName !== "") {
+            body.directoryname = directoryName;
+        }
+
+        try {
+            const response = await fetch(endpoint.path, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(body),
+            });
+
+            if (!response.ok) {
+                let errorMsg = `Failed to create directory: ${response.status} ${response.statusText}`;
+                let errorBody: any = {};
+                try {
+                    errorBody = await response.json();
+                } catch (_) {}
+                if (response.status === 400) {
+                    throw new Error(errorBody.message || 'Invalid parameter for directory name');
+                }
+                if (response.status === 503) {
+                    throw new Error(errorBody.message || 'Device busy, shooting/recording in progress, or mode not supported');
+                }
+                throw new Error(errorMsg);
+            }
+
+            const data = await response.json();
+            if (!data || typeof data.directoryname !== 'string') {
+                throw new Error('Unexpected response from camera when creating directory');
+            }
+            return data.directoryname;
+        } catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
+            throw new Error('Failed to create directory');
+        }
+    }
+
+    /**
+     * Sets (creates) a new directory on the camera.
+     * 
+     * This method sends a POST request to the camera to create a new directory.
+     * If the directory name is not specified, the camera will use its default naming.
+     * 
+     * @param directoryName - The name of the directory to create (5 uppercase letters/numbers/underscores, or empty for default)
+     * @returns The name of the created directory as returned by the camera
+     * @throws Error if the request fails, the parameter is invalid, or the device is busy
+     */
+    public async selectDirectory(directoryName?: string): Promise<string> {
+        const endpoint = this.getFeatureUrl('functions/directory/directoryselection');
+        if (!endpoint) {
+            throw new Error('Select directory feature not found');
+        }
+
+        // Prepare request body
+        let body: any = {};
+        if (directoryName !== undefined && directoryName !== null && directoryName !== "") {
+            body.value = directoryName;
+        }
+
+        try {
+            const response = await fetch(endpoint.path, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(body),
+            });
+
+            if (!response.ok) {
+                let errorMsg = `Failed to select directory: ${response.status} ${response.statusText}`;
+                let errorBody: any = {};
+                try {
+                    errorBody = await response.json();
+                } catch (_) {}
+                if (response.status === 400) {
+                    throw new Error(errorBody.message || 'Invalid parameter for directory name');
+                }
+                if (response.status === 503) {
+                    throw new Error(errorBody.message || 'Device busy, shooting/recording in progress, or mode not supported');
+                }
+                throw new Error(errorMsg);
+            }
+
+            const data = await response.json();
+            if (!data || typeof data.directoryname !== 'string') {
+                throw new Error('Unexpected response from camera when creating directory');
+            }
+            return data.directoryname;
+        } catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
+            throw new Error('Failed to create directory');
+        }
+    }
+
+    /**
+     * Gets the name of the most recently created directory on the camera.
+     * 
+     * This method sends a POST request with an empty body to the camera, which will create a new directory
+     * using the camera's default naming and return the directory name.
+     * 
+     * @returns The name of the created directory as returned by the camera
+     * @throws Error if the request fails or the device is busy
+     */
+    public async getDirectory(): Promise<string> {
+        // This operation is essentially the same as setDirectory() with no directoryName
+        return this.selectDirectory();
     }
 }
 

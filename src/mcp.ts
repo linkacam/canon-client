@@ -55,9 +55,10 @@ server.tool(
         https: z.boolean().optional().default(false),
         username: z.string().optional(),
         password: z.string().optional(),
+        ccapiTopUrlfordevPath: z.string().optional(),
     },
-    async ({ host, port, https, username, password }) => {
-        canon = new Canon(host, port, https, username, password);
+    async ({ host, port, https, username, password, ccapiTopUrlfordevPath }) => {
+        canon = new Canon(host, port, https, username, password, ccapiTopUrlfordevPath);
         const cameraInfo = await canon.connect({ startLiveView: true });
         return {
             content: [

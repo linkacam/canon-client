@@ -554,6 +554,7 @@ export enum CanonContentType {
     ALL = 'all',
 
     /** JPEG image files */
+    JPG = 'jpg',
     JPEG = 'jpeg',
 
     /** HEIF (High Efficiency Image Format) files */
@@ -776,6 +777,11 @@ export class Canon extends Camera {
     https: boolean;
     username?: string;
     password?: string;
+    /**
+     * CCAPI "top url for developer" endpoint used to discover supported APIs.
+     * Example: `/ccapi/ver100/topurlfordev`
+     */
+    ccapiTopUrlfordevPath: string;
     features?: ApiVersionFeatures;
     storages?: CanonContents;
     directories?: CanonContents;
@@ -796,7 +802,14 @@ export class Canon extends Camera {
     wifiSettings?: CanonWifiSettings;
     currentConnectionSetting?: CanonValueAbility<string>;
 
-    constructor(ipAddress: string, port: number = 443, https: boolean, username?: string, password?: string) {
+    constructor(
+        ipAddress: string,
+        port: number = 443,
+        https: boolean,
+        username?: string,
+        password?: string,
+        ccapiTopUrlfordevPath: string = '/ccapi/ver100/topurlfordev'
+    ) {
         super();
         this.ipAddress = ipAddress;
         this.port = port;
@@ -804,19 +817,33 @@ export class Canon extends Camera {
         this.username = username;
         this.password = password;
         this.baseUrl = `${this.https ? 'https' : 'http'}://${this.ipAddress}:${this.port}`;
+        this.ccapiTopUrlfordevPath = ccapiTopUrlfordevPath;
     }
 
     async connect({ startLiveView = false }: CanonConnectOptions = {}): Promise<CanonConnectResult> {
         const headers = new Headers();
 
         try {
-            const response = await fetch(`${this.baseUrl}/ccapi`, {
+            // Some cameras require an initial CCAPI call to prepare internal state.
+            // We intentionally ignore the response body and only require 200 OK.
+            const initResponse = await fetch(`${this.baseUrl}/ccapi`, {
+                method: 'GET',
+                headers: headers,
+            });
+            if (!initResponse.ok) {
+                const errorMessage = `HTTP error! status: ${initResponse.status} for ${this.baseUrl}/ccapi`;
+                throw new Error(errorMessage);
+            }
+
+            const featuresUrl = new URL(this.ccapiTopUrlfordevPath, this.baseUrl);
+            console.log('featuresUrl', featuresUrl.toString());
+            const response = await fetch(featuresUrl.toString(), {
                 method: 'GET',
                 headers: headers,
             });
 
             if (!response.ok) {
-                const errorMessage = `HTTP error! status: ${response.status} for ${this.baseUrl}`;
+                const errorMessage = `HTTP error! status: ${response.status} for ${featuresUrl.toString()}`;
                 throw new Error(errorMessage);
             }
 
